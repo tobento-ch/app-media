@@ -1,0 +1,19 @@
+{
+    "img": {
+        "src": {
+            "width": 100
+        }
+    },
+    "sources": [
+        {
+            "srcset": [
+                {
+                    "width": 50,
+                    "height": 50,
+                    "descriptor": null,
+                    "mimeType": "image/webp"
+                }
+            ]
+        }
+    ]
+}

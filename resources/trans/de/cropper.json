@@ -1,0 +1,7 @@
+{
+    "Cannot keep the minimal crop data set for the area.": "Das minimale Crop-Area kann nicht beibehalten werden.",
+    "Could not detect the image width and height!": "Die Bildbreite und -höhe konnte nicht ermittelt werden!",
+    "Invalid target data set, cannot keep ratio!": "Ungültige Zieldimension, Verhältnis kann nicht eingehalten werden!",
+    "The image is too small and thereby the image quality may suffer!": "Das Bild ist zu klein und dadurch kann die Bildqualität leiden!",
+    "The image quality may suffer as the crop area is too small!": "Die Bildqualität kann leiden, da der Zuschneidebereich zu klein ist!"
+}

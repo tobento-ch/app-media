@@ -1,0 +1,7 @@
+{
+    "Cannot keep the minimal crop data set for the area.": "Cannot keep the minimal crop data set for the area.",
+    "Could not detect the image width and height!": "Could not detect the image width and height!",
+    "Invalid target data set, cannot keep ratio!": "Invalid target data set, cannot keep ratio!",
+    "The image is too small and thereby the image quality may suffer!": "The image is too small and thereby the image quality may suffer!",
+    "The image quality may suffer as the crop area is too small!": "The image quality may suffer as the crop area is too small!"
+}

@@ -1,0 +1,33 @@
+{
+    "img": {
+        "src": {
+            "width": 500
+        },
+        "srcset": [
+            {
+                "width": 100,
+                "height": 50,
+                "descriptor": "480w"
+            }
+        ],
+        "attributes": {
+            "sizes": "(max-width: 600px) 480px, 800px"
+        }
+    },
+    "sources": [
+        {
+            "srcset": [
+                {
+                    "width": 70,
+                    "height": 30,
+                    "descriptor": null,
+                    "mimeType": "image/webp"
+                }
+            ],
+            "attributes": {
+                "type": "image/webp",
+                "media": "(min-width: 800px)"
+            }
+        }
+    ]
+}
