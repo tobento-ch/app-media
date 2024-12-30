@@ -688,8 +688,8 @@ The file writer class writes the given file to the defined [File Storage](https:
 ```php
 use Tobento\App\Media\FileStorage\FileWriter;
 use Tobento\App\Media\FileStorage\FileWriterInterface;
+use Tobento\App\Media\FileStorage\Writer;
 use Tobento\App\Media\Image\ImageProcessor;
-use Tobento\App\Media\Image\Writer;
 use Tobento\Service\FileStorage\StorageInterface;
 
 $fileWriter = new FileWriter(
