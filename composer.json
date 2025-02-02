@@ -36,6 +36,7 @@
         "tobento/app-logging": "^1.0",
         "tobento/app-queue": "^1.0",
         "tobento/app-view": "^1.0.2",
+        "tobento/js-cropper": "^1.0",
         "tobento/service-icon": "^1.0",
         "tobento/service-imager": "^1.0",
         "tobento/service-filesystem": "^1.0.5",
