@@ -93,6 +93,13 @@ class MediaExtended implements MigrationInterface
                 type: 'assets',
                 description: 'Media assets.',
             ),
+            new DirCopy(
+                dir: $this->dirs->get('vendor').'tobento/js-cropper/src/',
+                destDir: $this->dirs->get('public').'assets/js-cropper/',
+                name: 'JS Cropper assets',
+                type: 'assets',
+                description: 'JS Cropper assets.',
+            ),
         );
     }
 
