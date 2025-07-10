@@ -280,7 +280,7 @@ class ImageProcessor implements ImageProcessorInterface
     {
         $detector = new FinfoMimeTypeDetector();
         
-        switch ($resource) {
+        switch (true) {
             case $resource instanceof Stream:
                 $mimeType = $detector->detectMimeTypeFromBuffer((string)$resource->stream());
                 break;
