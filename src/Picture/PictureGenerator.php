@@ -274,7 +274,7 @@ class PictureGenerator implements PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
     ): PictureTagInterface {
-        switch ($resource) {
+        switch (true) {
             case is_string($resource):
                 $file = $this->storages->get($resource)->with('stream', 'url')->file(path: $path);
 
