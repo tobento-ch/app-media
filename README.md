@@ -128,7 +128,7 @@ In the [media config file](#media-config) you can configure this feature:
 To retrieve files, use the ```storage``` method from the ```File::class``` returning a **read-only** [file storage](https://github.com/tobento-ch/service-file-storage#storage-interface). The file storage does not throw any exceptions when a file does not exists instead it returns an "empty" file.
 
 ```php
-use Tobento\Media\Feature\File;
+use Tobento\App\Media\Feature\File;
 use Tobento\Service\FileStorage\FileInterface;
 use Tobento\Service\FileStorage\StorageInterface;
 
@@ -147,7 +147,7 @@ $file = $storage->file(path: 'path/to/file.jpg');
 By default, the file storage will retrieve only file urls. If you wish to retrieve other [file attributes](https://github.com/tobento-ch/service-file-storage#available-file-attributes) use the file storage ```with``` method:
 
 ```php
-use Tobento\Media\Feature\File;
+use Tobento\App\Media\Feature\File;
 
 $file = $app->get(File::class)
     ->storage(storage: 'images')
@@ -158,7 +158,7 @@ $file = $app->get(File::class)
 If you only want to retrieve a file url, you may prefer to use the ```url``` method instead:
 
 ```php
-use Tobento\Media\Feature\File;
+use Tobento\App\Media\Feature\File;
 
 $file = $app->get(File::class)->url(storage: 'images', path: 'path/to/file.jpg');
 ```
