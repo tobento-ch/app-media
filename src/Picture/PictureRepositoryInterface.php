@@ -48,7 +48,7 @@ interface PictureRepositoryInterface
     ): PictureInterface;
     
     /**
-     * Deletes the created picture with all its created images.
+     * Deletes the created picture with all its created images for the specified path and definition.
      *
      * @param string $path
      * @param string|DefinitionInterface $definition
@@ -57,13 +57,20 @@ interface PictureRepositoryInterface
     public function delete(string $path, string|DefinitionInterface $definition): null|PictureInterface;
     
     /**
-     * Deletes all created pictures with all its created images.
+     * Deletes all created pictures with all its created images for the specified definition.
      *
-     * @param string $path
      * @param string|DefinitionInterface $definition
      * @return array<array-key, PictureInterface> The deleted picture.
      */
     public function deleteAll(string|DefinitionInterface $definition): array;
+    
+    /**
+     * Deletes all created pictures with all its created images for the specified path.
+     *
+     * @param string $path
+     * @return array<array-key, PictureInterface> The deleted picture.
+     */
+    public function deleteAllByPath(string $path): array;
     
     /**
      * Clear all created pictures.

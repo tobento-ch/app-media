@@ -99,7 +99,7 @@ class PictureRepository implements PictureRepositoryInterface
     }
     
     /**
-     * Deletes the created picture with all its created images.
+     * Deletes the created picture with all its created images for the specified path and definition.
      *
      * @param string $path
      * @param string|DefinitionInterface $definition
@@ -127,9 +127,8 @@ class PictureRepository implements PictureRepositoryInterface
     }
     
     /**
-     * Deletes all created pictures with all its created images.
+     * Deletes all created pictures with all its created images for the specified definition.
      *
-     * @param string $path
      * @param string|DefinitionInterface $definition
      * @return array<array-key, PictureInterface> The deleted picture.
      */
@@ -158,6 +157,32 @@ class PictureRepository implements PictureRepositoryInterface
             $pictureStorage->delete($file->path());
             
             $pictures[] = $picture;
+        }
+        
+        return $pictures;
+    }
+    
+    /**
+     * Deletes all created pictures with all its created images for the specified path.
+     *
+     * @param string $path
+     * @return array<array-key, PictureInterface> The deleted picture.
+     */
+    public function deleteAllByPath(
+        string $path,
+    ): array {
+        $pictureStorage = $this->storages->get($this->pictureStorageName);
+        
+        $folders = $pictureStorage->folders(path: '', recursive: false);
+        
+        $pictures = [];
+        
+        foreach($folders as $folder) {
+            $picture = $this->delete(path: $path, definition: $folder->path());
+            
+            if ($picture) {
+                $pictures[] = $picture;
+            }
         }
         
         return $pictures;
