@@ -610,6 +610,41 @@ Or clear generated pictures of specific definitions only:
 php ap picture:clear --def=product-main --def=post
 ```
 
+**Using Picture Generator**
+
+```php
+use Tobento\App\Media\Picture\PictureGeneratorInterface;
+
+class SomeService
+{
+    public function __construct(
+        protected PictureGeneratorInterface $pictureGenerator,
+    ) {}
+    
+    private function deleteGeneratedPictures()
+    {
+        // First, get the picture repository from the generator:
+        $pictureRepository = $this->pictureGenerator->pictureRepository();
+        
+        // Deletes the created picture with all its created images for the specified path and definition:
+        $pictureRepository->delete(
+            path: 'foo/image.jpg',
+            definition: 'product-main',
+        );
+        
+        // Deletes all created pictures with all its created images for the specified definition:
+        $pictureRepository->deleteAll(
+            definition: 'product-main',
+        );
+        
+        // Deletes all created pictures with all its created images for the specified path:
+        $pictureRepository->deleteAllByPath(
+            path: 'foo/image.jpg',
+        );
+    }
+}
+```
+
 ### Picture Editor Feature
 
 This feature requires the [Picture Feature](#picture-feature) to be installed.
