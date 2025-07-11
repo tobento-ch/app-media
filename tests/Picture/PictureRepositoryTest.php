@@ -323,6 +323,33 @@ class PictureRepositoryTest extends TestCase
         $this->assertSame(0, count($deletedPictures));
     }
     
+    public function testDeleteAllByPathMethod()
+    {
+        $definition = new ArrayDefinition('product-main', ['img' => ['src' => [30]]]);
+        $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
+        
+        $createdPicture = $this->createPictureCreator()->createFromResource(
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            definition: $definition,
+        );
+        
+        $storages = $this->createFileStorages();
+        $repo = $this->createPictureRepository($storages);
+        $picture = $repo->save(path: 'image.jpg', definition: $definition, picture: $createdPicture);
+        $picture = $repo->save(path: 'foo/image.jpg', definition: $definition, picture: $createdPicture);
+        $picture = $repo->save(path: 'image.jpg', definition: $definitionList, picture: $createdPicture);
+        
+        $this->assertSame(3, count($storages->get('picture-storage')->files(path: '', recursive: true)->all()));
+        $this->assertSame(3, count($storages->get('image-storage')->files(path: '', recursive: true)->all()));
+        
+        $deletedPictures = $repo->deleteAllByPath(path: 'image.jpg');
+        
+        $this->assertSame(1, count($storages->get('picture-storage')->files(path: '', recursive: true)->all()));
+        $this->assertSame(1, count($storages->get('image-storage')->files(path: '', recursive: true)->all()));
+        $this->assertNotNull($deletedPictures[0]->img()->src()->url());
+        $this->assertSame(2, count($deletedPictures));
+    }
+    
     public function testClearMethod()
     {
         $definition = new ArrayDefinition('product-main', ['img' => ['src' => [30]]]);
