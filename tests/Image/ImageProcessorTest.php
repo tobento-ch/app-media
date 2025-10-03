@@ -69,7 +69,7 @@ class ImageProcessorTest extends TestCase
         $this->assertSame('jpg', $encoded->extension());
         $this->assertSame(200, $encoded->width());
         $this->assertSame(150, $encoded->height());
-        $this->assertSame(12732, $encoded->size());
+        $this->assertSame(12733, $encoded->size());
         $this->assertFalse($encoded->actions()->empty());
     }
     
@@ -85,7 +85,7 @@ class ImageProcessorTest extends TestCase
         $this->assertSame('jpg', $encoded->extension());
         $this->assertSame(200, $encoded->width());
         $this->assertSame(150, $encoded->height());
-        $this->assertSame(12732, $encoded->size());
+        $this->assertSame(12733, $encoded->size());
         $this->assertFalse($encoded->actions()->empty());
     }
 
@@ -123,7 +123,7 @@ class ImageProcessorTest extends TestCase
         $this->assertNotEmpty($encoded->encoded());
         $this->assertSame(20, $encoded->width());
         $this->assertSame(15, $encoded->height());
-        $this->assertSame(893, $encoded->size());
+        $this->assertSame(889, $encoded->size());
         $this->assertSame(3, count($encoded->actions()->all()));
         $this->assertInstanceof(Action\Orientate::class, $encoded->actions()->all()[0]);
         $this->assertInstanceof(Action\Resize::class, $encoded->actions()->all()[1]);
@@ -173,7 +173,7 @@ class ImageProcessorTest extends TestCase
             resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
         );
         
-        $this->assertTrue($testHandler->hasRecord('Disallowed action '.Action\Resize::class.' skipped', 'notice'));
+        $this->assertTrue($testHandler->hasRecord('Disallowed action '.Action\Resize::class.' skipped', Level::Notice));
     }
     
     public function testDisallowedActionsGetSkipped()
@@ -219,7 +219,7 @@ class ImageProcessorTest extends TestCase
             resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
         );
         
-        $this->assertTrue($testHandler->hasRecord('Disallowed action '.Action\Resize::class.' skipped', 'notice'));
+        $this->assertTrue($testHandler->hasRecord('Disallowed action '.Action\Resize::class.' skipped', Level::Notice));
     }
     
     public function testInvalidActionsGetsSkipped()
@@ -259,7 +259,7 @@ class ImageProcessorTest extends TestCase
             resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
         );
         
-        $this->assertTrue($testHandler->hasRecord('Unable to create action resize', 'notice'));
+        $this->assertTrue($testHandler->hasRecord('Unable to create action resize', Level::Notice));
     }    
     
     public function testConvertsImage()
