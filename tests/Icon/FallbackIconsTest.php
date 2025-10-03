@@ -53,7 +53,7 @@ class FallbackIconsTest extends TestCase
         $icons->setLogger($logger);
         $icon = $icons->get('download');
         
-        $this->assertTrue($testHandler->hasRecord('Icon download not found', 'warning'));
+        $this->assertTrue($testHandler->hasRecord('Icon download not found', Level::Warning));
     }
     
     public function testGetMethodThrowsIconNotFoundExceptionIfConfigured()
