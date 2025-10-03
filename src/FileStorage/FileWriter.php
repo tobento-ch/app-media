@@ -137,7 +137,7 @@ class FileWriter implements FileWriterInterface
         }
         
         if ($this->folders === static::ALNUM) {
-            return preg_replace('/[^A-Za-z0-9_\-\/]/', '-', trim($path));
+            return (string)preg_replace('/[^A-Za-z0-9_\-\/]/', '-', trim($path));
         }
 
         return $path;
@@ -164,7 +164,7 @@ class FileWriter implements FileWriterInterface
         }
         
         if ($this->filenames === static::ALNUM) {
-            return preg_replace('/[^A-Za-z0-9_\-]/', '-', trim($filename));
+            return (string)preg_replace('/[^A-Za-z0-9_\-]/', '-', trim($filename));
         }
         
         // static::KEEP original filename may be dangerous on upload!
@@ -174,10 +174,8 @@ class FileWriter implements FileWriterInterface
     /**
      * Verify the file duplicate.
      *
-     * @param string $filename
-     * @param string $folderPath
-     * @param string $extension
-     * @return string The verified path.
+     * @param string $path
+     * @return string
      */
     protected function verifyFileDuplicate(string $path): string
     {
@@ -237,7 +235,7 @@ class FileWriter implements FileWriterInterface
             throw new WriteException(
                 message: 'Failed to write the file :path to the file storage :storage.',
                 parameters: [':path' => $path, ':storage' => $this->storage->name()],
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
