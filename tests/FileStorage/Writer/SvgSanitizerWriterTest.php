@@ -92,6 +92,6 @@ class SvgSanitizerWriterTest extends TestCase
             originalFilename: 'orgfilename.svg',
         );
         
-        $this->assertTrue($testHandler->hasRecord('SVG has sanitizing issues for the file :path.', 'info'));
+        $this->assertTrue($testHandler->hasRecord('SVG has sanitizing issues for the file :path.', Level::Info));
     }    
 }
