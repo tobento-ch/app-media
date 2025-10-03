@@ -260,7 +260,6 @@ class PictureEditor extends Boot implements FeatureInterface
      * @param string $path
      * @param StoragesInterface $storages
      * @param DefinitionsInterface $definitions
-     * @param RouterInterface $router
      * @param RequesterInterface $requester
      * @param ResponserInterface $responser
      * @param PreviousUriInterface $previousUri
@@ -273,7 +272,6 @@ class PictureEditor extends Boot implements FeatureInterface
         string $path,
         StoragesInterface $storages,
         DefinitionsInterface $definitions,
-        RouterInterface $router,
         RequesterInterface $requester,
         ResponserInterface $responser,
         PreviousUriInterface $previousUri,
@@ -354,7 +352,6 @@ class PictureEditor extends Boot implements FeatureInterface
      * @param string $storage
      * @param string $path
      * @param StoragesInterface $storages
-     * @param RouterInterface $router
      * @param RequesterInterface $requester
      * @param ResponserInterface $responser
      * @return ResponseInterface
@@ -408,7 +405,7 @@ class PictureEditor extends Boot implements FeatureInterface
             throw new HttpException(
                 statusCode: 422,
                 message: 'Image processing failed.',
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
