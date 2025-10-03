@@ -247,7 +247,7 @@ class PictureRepository implements PictureRepositoryInterface
      * Returns the build picture path.
      *
      * @param string $path
-     * @param string $definition
+     * @param string $definitionName
      * @return string
      */
     protected function buildPicturePath(string $path, string $definitionName): string
@@ -262,7 +262,7 @@ class PictureRepository implements PictureRepositoryInterface
     /**
      * Returns the build folder path.
      *
-     * @param string $definition
+     * @param string $definitionName
      * @return string
      */
     protected function buildFolderPath(string $definitionName): string
