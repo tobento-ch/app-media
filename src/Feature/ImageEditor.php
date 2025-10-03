@@ -284,7 +284,7 @@ class ImageEditor extends Boot implements FeatureInterface
             throw new HttpException(
                 statusCode: 422,
                 message: 'Image processing failed.',
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
@@ -303,7 +303,7 @@ class ImageEditor extends Boot implements FeatureInterface
             throw new HttpException(
                 statusCode: 422,
                 message: 'Image processing failed.',
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
@@ -400,7 +400,7 @@ class ImageEditor extends Boot implements FeatureInterface
             throw new HttpException(
                 statusCode: 422,
                 message: 'Image processing failed.',
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
