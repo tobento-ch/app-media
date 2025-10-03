@@ -75,7 +75,7 @@ class SvgSanitizerWriter implements WriterInterface
         
         if ($this->logIssues && !empty($issues)) {
             $this->getLogger()->info(
-                message: sprintf('SVG has sanitizing issues for the file :path.', $path),
+                message: sprintf('SVG has sanitizing issues for the file %s.', $path),
                 context: ['issues' => $issues],
             );
         }
