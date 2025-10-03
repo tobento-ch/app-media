@@ -180,7 +180,7 @@ class ImageProcessor implements ImageProcessorInterface
             throw new ImageProcessException(
                 resource: $resource,
                 message: $e->getMessage(),
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
@@ -228,7 +228,6 @@ class ImageProcessor implements ImageProcessorInterface
     /**
      * Returns the created actions.
      *
-     * @param string $path
      * @return array<array-key, ActionInterface>
      */
     protected function createActions(): array
