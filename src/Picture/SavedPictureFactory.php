@@ -155,7 +155,7 @@ class SavedPictureFactory
         } catch (FileWriteException|FileNotFoundException $e) {
             throw new PictureException(
                 message: sprintf('Writing src to storage failed for path %s: %s', $path, $e->getMessage()),
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
