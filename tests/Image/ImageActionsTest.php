@@ -127,7 +127,7 @@ class ImageActionsTest extends TestCase
         $actions->setLogger($logger);
         $verified = $actions->verifyInputActions(['gamma' => ['gamma' => 'abc']]);
         
-        $this->assertTrue($testHandler->hasRecord('Unable to create input action gamma', 'notice'));
+        $this->assertTrue($testHandler->hasRecord('Unable to create input action gamma', Level::Notice));
     }    
     
     public function testCreateActionMethod()
