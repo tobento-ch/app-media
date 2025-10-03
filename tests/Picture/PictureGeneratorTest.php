@@ -182,7 +182,7 @@ class PictureGeneratorTest extends TestCase
         );
         
         $this->assertFalse(empty($pictureTag->img()->attributes()->get('src')));
-        $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Generating picture for path image.jpg failed:', 'warning'));
+        $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Generating picture for path image.jpg failed:', Level::Warning));
     }
     
     public function testGenerateMethodQueuesByDefault()
@@ -290,7 +290,7 @@ class PictureGeneratorTest extends TestCase
         );
         
         $this->assertInstanceof(NullPictureTag::class, $pictureTag);
-        $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Creating fallback picture for path file.txt failed:', 'warning'));
+        $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Creating fallback picture for path file.txt failed:', Level::Warning));
     }
     
     public function testRegenerateMethodRegeneratesPicture()
@@ -324,7 +324,7 @@ class PictureGeneratorTest extends TestCase
         );
         
         $this->assertFalse(empty($pictureTag->img()->attributes()->get('src')));
-        $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Regenerating picture for path image.jpg failed:', 'warning'));
+        $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Regenerating picture for path image.jpg failed:', Level::Warning));
     }
     
     public function testRegenerateMethodQueuesByDefault()
