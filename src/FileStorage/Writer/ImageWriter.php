@@ -61,7 +61,7 @@ class ImageWriter implements WriterInterface
             throw new WriteException(
                 message: 'Image processing failed for the file :path.',
                 parameters: [':path' => $path],
-                code: (int)$e->getCode(),
+                code: $e->getCode(),
                 previous: $e,
             );
         }
