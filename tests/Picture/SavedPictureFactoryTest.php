@@ -58,7 +58,7 @@ class SavedPictureFactoryTest extends TestCase
         $storage = $this->createFileStorage();
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: new ArrayDefinition('product', [
                 'img' => [
                     'src' => [30, 15],
@@ -92,7 +92,7 @@ class SavedPictureFactoryTest extends TestCase
         $storage = $this->createFileStorage();
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: new ArrayDefinition('product', [
                 'img' => [
                     'src' => [30, 15],
@@ -131,7 +131,7 @@ class SavedPictureFactoryTest extends TestCase
         $storage = $this->createFileStorage();
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: new ArrayDefinition('product', [
                 'img' => [
                     'src' => [30, 15],
@@ -176,7 +176,7 @@ class SavedPictureFactoryTest extends TestCase
         $storage = $this->createFileStorage();
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: new ArrayDefinition('product', [
                 'img' => [
                     'src' => [30, 15],

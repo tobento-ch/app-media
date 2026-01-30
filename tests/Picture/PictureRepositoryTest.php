@@ -81,7 +81,7 @@ class PictureRepositoryTest extends TestCase
         ]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -104,7 +104,7 @@ class PictureRepositoryTest extends TestCase
         ]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -127,7 +127,7 @@ class PictureRepositoryTest extends TestCase
         ]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -156,7 +156,7 @@ class PictureRepositoryTest extends TestCase
         $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -182,7 +182,7 @@ class PictureRepositoryTest extends TestCase
         $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -207,7 +207,7 @@ class PictureRepositoryTest extends TestCase
         $definition = new ArrayDefinition('product-main', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -231,7 +231,7 @@ class PictureRepositoryTest extends TestCase
         $definition = new ArrayDefinition('product-main', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -252,7 +252,7 @@ class PictureRepositoryTest extends TestCase
         $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -279,7 +279,7 @@ class PictureRepositoryTest extends TestCase
         $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -305,7 +305,7 @@ class PictureRepositoryTest extends TestCase
         $definition = new ArrayDefinition('product-main', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -329,7 +329,7 @@ class PictureRepositoryTest extends TestCase
         $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
@@ -356,7 +356,7 @@ class PictureRepositoryTest extends TestCase
         $definitionList = new ArrayDefinition('product-list', ['img' => ['src' => [30]]]);
         
         $createdPicture = $this->createPictureCreator()->createFromResource(
-            resource: new File(__DIR__.'/../tmp/app/storage/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../tmp/app/storage/uploads-public/image.jpg'),
             definition: $definition,
         );
         
