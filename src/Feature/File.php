@@ -25,9 +25,6 @@ use Tobento\Service\FileStorage\StorageInterface;
 use Tobento\Service\FileStorage\StoragesInterface;
 use Tobento\Service\View\ViewInterface;
 
-/**
- * File
- */
 class File extends Boot implements FeatureInterface
 {
     public const INFO = [
