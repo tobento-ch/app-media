@@ -65,7 +65,7 @@ class PictureGeneratorTest extends TestCase
         
         $storages = Factory::createFileStorages(['generated-picture-data', 'generator-uploads'], withPublicUrl: false);
         $storages->add(Factory::createFileStorage('generated-images', withPublicUrl: true));
-        $image = file_get_contents(__DIR__.'/../resources/uploads/image.jpg');
+        $image = file_get_contents(__DIR__.'/../resources/uploads-public/image.jpg');
         $storages->get('generator-uploads')->write(path: 'image.jpg', content: $image);
         $storages->get('generator-uploads')->write(path: 'file.txt', content: 'text');
         $storages->get('generated-images')->write(path: 'foo/image.jpg', content: $image);
@@ -293,6 +293,114 @@ class PictureGeneratorTest extends TestCase
         $this->assertTrue($container->get(TestHandler::class)->hasRecordThatContains('Creating fallback picture for path file.txt failed:', Level::Warning));
     }
     
+    public function testGenerateMethodWithPrivateStorageWithoutAllowReturnsNullPictureTag()
+    {
+        $container = $this->createContainer();
+        $generator = $this->createPictureGenerator($container);
+        $queue = $container->get(QueueInterface::class);
+
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private'));
+
+        $pictureTag = $generator->generate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: false,
+        );
+
+        $this->assertInstanceof(NullPictureTag::class, $pictureTag);
+        $this->assertSame(0, $queue->size());
+    }
+    
+    public function testGenerateMethodWithPrivateStorageAllowedReturnsGeneratedPictureIfExists()
+    {
+        $container = $this->createContainer();
+        $queue = $container->get(QueueInterface::class);
+        $generator = $this->createPictureGenerator($container);
+
+        // Add private storage
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private'));
+
+        // Write a real image into private storage
+        $image = file_get_contents(__DIR__.'/../resources/uploads-public/image.jpg');
+        $container->get(StoragesInterface::class)
+            ->get('generator-uploads-private')
+            ->write('image.jpg', $image);
+
+        // Ensure repository is clean
+        $generator->pictureRepository()->delete(path: 'image.jpg', definition: 'product-main');
+
+        // First call: generate picture (queue = false)
+        $pictureTag = $generator->generate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: false,
+            allowPrivateStorage: true,
+        );
+
+        $this->assertTrue(str_ends_with($pictureTag->img()->attributes()->get('src'), '.jpg'));
+
+        // Second call: should return existing picture, no queue
+        $pictureTag = $generator->generate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: true,
+        );
+
+        // No new queue job should be added
+        $this->assertSame(0, $queue->size());
+
+        // Should still return the generated picture
+        $this->assertTrue(str_ends_with($pictureTag->img()->attributes()->get('src'), '.jpg'));
+
+        // Cleanup
+        $generator->pictureRepository()->delete(path: 'image.jpg', definition: 'product-main');
+    }
+    
+    public function testGenerateMethodWithPrivateStorageAllowedQueues()
+    {
+        $container = $this->createContainer();
+        $generator = $this->createPictureGenerator($container);
+        $queue = $container->get(QueueInterface::class);
+
+        // Add private storage
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private', withPublicUrl: false));
+
+        // Write a real image into private storage so fallback can be created
+        $image = file_get_contents(__DIR__.'/../resources/uploads-public/image.jpg');
+        $container->get(StoragesInterface::class)
+            ->get('generator-uploads-private')
+            ->write('image.jpg', $image);
+        
+        $generator->pictureRepository()->delete('image.jpg', 'product-main');
+        
+        // Call generate() with allowPrivateStorage=true
+        $pictureTag = $generator->generate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: true,
+        );
+        
+        // Assert fallback was created
+        $this->assertTrue(
+            str_starts_with($pictureTag->img()->attributes()->get('src'), 'data:image/jpeg;base64')
+        );
+
+        // Assert job was queued
+        $this->assertSame(1, $queue->size());
+        
+        $generator->pictureRepository()->delete(path: 'image.jpg', definition: 'product-main');
+    }
+    
     public function testRegenerateMethodRegeneratesPicture()
     {
         $container = $this->createContainer();
@@ -372,5 +480,119 @@ class PictureGeneratorTest extends TestCase
         
         $this->assertSame(2, $queue->size());
         $this->assertInstanceof(PictureTagInterface::class, $pictureTag);
+    }
+    
+    public function testRegenerateMethodWithPrivateStorageWithoutAllowReturnsNullPictureTag()
+    {
+        $container = $this->createContainer();
+        $generator = $this->createPictureGenerator($container);
+        $queue = $container->get(QueueInterface::class);
+
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private'));
+
+        $pictureTag = $generator->regenerate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: false,
+        );
+
+        $this->assertInstanceof(NullPictureTag::class, $pictureTag);
+        $this->assertSame(0, $queue->size());
+    }
+    
+    public function testRegenerateMethodWithPrivateStorageAllowedQueuesNotUniqueJob()
+    {
+        $container = $this->createContainer();
+        $generator = $this->createPictureGenerator($container);
+        $queue = $container->get(QueueInterface::class);
+
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private'));
+
+        // Write file so fallback can be created
+        $image = file_get_contents(__DIR__.'/../resources/uploads-public/image.jpg');
+        $container->get(StoragesInterface::class)
+            ->get('generator-uploads-private')
+            ->write('image.jpg', $image);
+
+        $this->assertSame(0, $queue->size());
+
+        $pictureTag = $generator->regenerate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: true,
+        );
+
+        $this->assertSame(1, $queue->size());
+        $this->assertInstanceof(PictureTagInterface::class, $pictureTag);
+
+        // Second call → non‑unique → queue grows to 2
+        $pictureTag = $generator->regenerate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: true,
+        );
+
+        $this->assertSame(2, $queue->size());
+        $this->assertInstanceof(PictureTagInterface::class, $pictureTag);
+    }
+    
+    public function testRegenerateMethodWithPrivateStorageAllowedCreatesFallback()
+    {
+        $container = $this->createContainer();
+        $generator = $this->createPictureGenerator($container);
+
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private', withPublicUrl: false));
+
+        // Write file so fallback can be created
+        $image = file_get_contents(__DIR__.'/../resources/uploads-public/image.jpg');
+        $container->get(StoragesInterface::class)
+            ->get('generator-uploads-private')
+            ->write('image.jpg', $image);
+
+        $pictureTag = $generator->regenerate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: true,
+            allowPrivateStorage: true,
+        );
+
+        $this->assertTrue(
+            str_starts_with($pictureTag->img()->attributes()->get('src'), 'data:image/jpeg;base64')
+        );
+    }
+    
+    public function testRegenerateMethodWithPrivateStorageAllowedRegeneratesPicture()
+    {
+        $container = $this->createContainer();
+        $generator = $this->createPictureGenerator($container);
+
+        $container->get(StoragesInterface::class)
+            ->add(Factory::createFileStorage(name: 'generator-uploads-private', type: 'private'));
+
+        // Write file so regeneration can read it
+        $image = file_get_contents(__DIR__.'/../resources/uploads-public/image.jpg');
+        $container->get(StoragesInterface::class)
+            ->get('generator-uploads-private')
+            ->write('image.jpg', $image);
+
+        $pictureTag = $generator->regenerate(
+            path: 'image.jpg',
+            resource: 'generator-uploads-private',
+            definition: 'product-main',
+            queue: false,
+            allowPrivateStorage: true,
+        );
+
+        $this->assertTrue(str_ends_with($pictureTag->img()->attributes()->get('src'), '.jpg'));
     }
 }
