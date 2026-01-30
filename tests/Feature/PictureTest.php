@@ -25,6 +25,7 @@ use Tobento\App\Media\Queue\PictureQueueHandlerInterface;
 use Tobento\Service\Console\ConsoleInterface;
 use Tobento\Service\FileStorage\StoragesInterface;
 use Tobento\Service\Picture\DefinitionsInterface;
+use Tobento\Service\Picture\NullPictureTag;
 use Tobento\Service\Picture\PictureTagInterface;
 use Tobento\Service\View\ViewInterface;
 use function Tobento\App\{directory};
@@ -90,20 +91,77 @@ class PictureTest extends \Tobento\App\Testing\TestCase
         $fakeQueue->clearQueue($fakeQueue->queue(name: 'file'));
         
         // first time, fallback picture and queued:
-        $pic = $view->picture(path: 'image.jpg', resource: 'uploads', definition: 'product');
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-public', definition: 'product');
         $this->assertInstanceof(PictureTagInterface::class, $pic);
         $this->assertTrue(str_starts_with($pic->img()->attributes()->get('src'), 'data:image/jpeg;base64'));
         $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 1);
         
         // second time, fallback picture and not queued as unique:
-        $pic = $view->picture(path: 'image.jpg', resource: 'uploads', definition: 'product');
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-public', definition: 'product');
         $this->assertInstanceof(PictureTagInterface::class, $pic);
         $this->assertTrue(str_starts_with($pic->img()->attributes()->get('src'), 'data:image/jpeg;base64'));
         $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 1);
         
         // third time with generated pics:
         $fakeQueue->runJobs($fakeQueue->queue(name: 'file')->getAllJobs());
-        $pic = $view->picture(path: 'image.jpg', resource: 'uploads', definition: 'product');
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-public', definition: 'product');
+        $app->get(PictureRepositoryInterface::class)->delete(path: 'image.jpg', definition: 'product');
+        
+        $this->assertInstanceof(PictureTagInterface::class, $pic);
+        $this->assertTrue(str_ends_with($pic->img()->attributes()->get('src'), '.jpg'));
+        $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 1);
+        
+        $fakeQueue->clearQueue($fakeQueue->queue(name: 'file'));
+    }
+    
+    public function testDisplayPictureWorkflowUsingPrivateStorage()
+    {
+        $this->fakeConfig()->with('media.features', [
+            new Picture(),
+        ]);
+        
+        $fakeQueue = $this->fakeQueue();
+        $app = $this->bootingApp();
+        $view = $app->get(ViewInterface::class);
+        $fakeQueue->clearQueue($fakeQueue->queue(name: 'file'));
+        
+        // first time, fallback picture and not queued as private:
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-private', definition: 'product');
+        $this->assertInstanceof(NullPictureTag::class, $pic);
+        $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 0);
+        
+        // second time, same as first
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-private', definition: 'product');
+        $this->assertInstanceof(NullPictureTag::class, $pic);
+        $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 0);
+    }
+    
+    public function testDisplayPictureWorkflowUsingPrivateStorageAllowing()
+    {
+        $this->fakeConfig()->with('media.features', [
+            new Picture(),
+        ]);
+        
+        $fakeQueue = $this->fakeQueue();
+        $app = $this->bootingApp();
+        $view = $app->get(ViewInterface::class);
+        $fakeQueue->clearQueue($fakeQueue->queue(name: 'file'));
+        
+        // first time, fallback picture and queued:
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-private', definition: 'product', allowPrivateStorage: true);
+        $this->assertInstanceof(PictureTagInterface::class, $pic);
+        $this->assertTrue(str_starts_with($pic->img()->attributes()->get('src'), 'data:image/jpeg;base64'));
+        $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 1);
+        
+        // second time, fallback picture and not queued as unique:
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-private', definition: 'product', allowPrivateStorage: true);
+        $this->assertInstanceof(PictureTagInterface::class, $pic);
+        $this->assertTrue(str_starts_with($pic->img()->attributes()->get('src'), 'data:image/jpeg;base64'));
+        $fakeQueue->queue(name: 'file')->assertPushedTimes(PictureJobHandler::class, 1);
+        
+        // third time with generated pics:
+        $fakeQueue->runJobs($fakeQueue->queue(name: 'file')->getAllJobs());
+        $pic = $view->picture(path: 'image.jpg', resource: 'uploads-private', definition: 'product', allowPrivateStorage: true);
         $app->get(PictureRepositoryInterface::class)->delete(path: 'image.jpg', definition: 'product');
         
         $this->assertInstanceof(PictureTagInterface::class, $pic);
