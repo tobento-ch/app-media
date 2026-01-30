@@ -80,6 +80,7 @@ class PictureGenerator implements PictureGeneratorInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      */
     public function generate(
@@ -87,9 +88,10 @@ class PictureGenerator implements PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface {
         try {
-            return $this->generating($path, $resource, $definition, $queue);
+            return $this->generating($path, $resource, $definition, $queue, $allowPrivateStorage);
         } catch (Throwable $e) {
             $this->getLogger()->warning(
                 message: sprintf('Generating picture for path %s failed: %s', $path, $e->getMessage()),
@@ -106,6 +108,7 @@ class PictureGenerator implements PictureGeneratorInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      */
     public function regenerate(
@@ -113,9 +116,10 @@ class PictureGenerator implements PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface {
         try {
-            return $this->regenerating($path, $resource, $definition, $queue);
+            return $this->regenerating($path, $resource, $definition, $queue, $allowPrivateStorage);
         } catch (Throwable $e) {
             $this->getLogger()->warning(
                 message: sprintf('Regenerating picture for path %s failed: %s', $path, $e->getMessage()),
@@ -132,6 +136,7 @@ class PictureGenerator implements PictureGeneratorInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      * @throws Throwable
      */
@@ -140,6 +145,7 @@ class PictureGenerator implements PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface {
         // Resolve definition:
         if (is_string($definition)) {
@@ -149,6 +155,15 @@ class PictureGenerator implements PictureGeneratorInterface
         // Check if picture is already generated:
         if ($picture = $this->pictureRepository->findOne($path, $definition)) {
             return $picture->toTag();
+        }
+        
+        // Prevent exposing private storage unless explicitly allowed
+        if (is_string($resource)) {
+            $storage = $this->storages->get($resource);
+            
+            if ($storage->isPrivate() && !$allowPrivateStorage) {
+                return new NullPictureTag();
+            }
         }
         
         // Queue it if set:
@@ -185,6 +200,7 @@ class PictureGenerator implements PictureGeneratorInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      * @throws Throwable
      */
@@ -193,10 +209,20 @@ class PictureGenerator implements PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface {
         // Resolve definition:
         if (is_string($definition)) {
             $definition = $this->definitions->get($definition);
+        }
+        
+        // Prevent exposing private storage unless explicitly allowed
+        if (is_string($resource)) {
+            $storage = $this->storages->get($resource);
+            
+            if ($storage->isPrivate() && !$allowPrivateStorage) {
+                return new NullPictureTag();
+            }
         }
         
         // Queue it if set:
@@ -213,7 +239,7 @@ class PictureGenerator implements PictureGeneratorInterface
         
         $this->pictureRepository->delete(path: $path, definition: $definition);
         
-        return $this->generate($path, $resource, $definition, $queue);
+        return $this->generate($path, $resource, $definition, $queue, $allowPrivateStorage);
     }
     
     /**
@@ -228,7 +254,7 @@ class PictureGenerator implements PictureGeneratorInterface
         }
 
         return $this->pictureCreator = new PictureCreator(
-            imager: (new ImagerFactory())->createImager(),
+            imager: new ImagerFactory()->createImager(),
             upsize: null,
             skipSmallerSizedSrc: false,
             verifySizes: false,

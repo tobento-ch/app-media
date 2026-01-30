@@ -36,9 +36,6 @@ use Tobento\Service\Picture\PictureTagInterface;
 use Tobento\Service\Queue\QueueInterface;
 use Tobento\Service\View\ViewInterface;
 
-/**
- * Picture
- */
 class Picture extends Boot implements FeatureInterface
 {
     public const INFO = [
@@ -173,6 +170,7 @@ class Picture extends Boot implements FeatureInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      */
     public function generatePicture(
@@ -180,12 +178,14 @@ class Picture extends Boot implements FeatureInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface {
         return $this->app->get(PictureGeneratorInterface::class)->generate(
             path: $path,
             resource: $resource,
             definition: $definition,
             queue: $queue,
+            allowPrivateStorage: $allowPrivateStorage,
         );
     }
 }

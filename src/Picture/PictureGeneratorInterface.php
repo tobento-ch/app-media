@@ -17,9 +17,6 @@ use Tobento\Service\Imager\ResourceInterface;
 use Tobento\Service\Picture\DefinitionInterface;
 use Tobento\Service\Picture\PictureTagInterface;
 
-/**
- * PictureGeneratorInterface
- */
 interface PictureGeneratorInterface
 {
     /**
@@ -36,6 +33,7 @@ interface PictureGeneratorInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      */
     public function generate(
@@ -43,6 +41,7 @@ interface PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface;
     
     /**
@@ -52,6 +51,7 @@ interface PictureGeneratorInterface
      * @param string|ResourceInterface $resource If string is provided it looks in file storage.
      * @param string|DefinitionInterface $definition A named definition or definition instance.
      * @param bool $queue
+     * @param bool $allowPrivateStorage Allow generating a picture from private storage.
      * @return PictureTagInterface
      */
     public function regenerate(
@@ -59,5 +59,6 @@ interface PictureGeneratorInterface
         string|ResourceInterface $resource,
         string|DefinitionInterface $definition,
         bool $queue = true,
+        bool $allowPrivateStorage = false,
     ): PictureTagInterface;
 }
