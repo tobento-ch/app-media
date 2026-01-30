@@ -17,6 +17,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Symfony\Component\HttpClient\Psr18Client;
 use Tobento\App\Media\Exception\CreateUploadedFileException;
 use Tobento\App\Media\Test\Factory;
 use Tobento\App\Media\Upload\UploadedFileFactory;
@@ -29,6 +30,8 @@ class UploadedFileFactoryTest extends TestCase
         $factory = new UploadedFileFactory(
             uploadedFileFactory: new Psr17Factory(),
             streamFactory: new Psr17Factory(),
+            client: new Psr18Client(),
+            requestFactory: new Psr17Factory(),
         );
         
         $this->assertInstanceof(UploadedFileFactoryInterface::class, $factory);
@@ -39,6 +42,8 @@ class UploadedFileFactoryTest extends TestCase
         $factory = new UploadedFileFactory(
             uploadedFileFactory: new Psr17Factory(),
             streamFactory: new Psr17Factory(),
+            client: new Psr18Client(),
+            requestFactory: new Psr17Factory(),
         );
         
         $uploadedFile = $factory->createFromRemoteUrl(
@@ -60,6 +65,8 @@ class UploadedFileFactoryTest extends TestCase
         $factory = new UploadedFileFactory(
             uploadedFileFactory: new Psr17Factory(),
             streamFactory: new Psr17Factory(),
+            client: new Psr18Client(),
+            requestFactory: new Psr17Factory(),
         );
         
         $uploadedFile = $factory->createFromRemoteUrl(
@@ -75,6 +82,8 @@ class UploadedFileFactoryTest extends TestCase
         $factory = new UploadedFileFactory(
             uploadedFileFactory: new Psr17Factory(),
             streamFactory: new Psr17Factory(),
+            client: new Psr18Client(),
+            requestFactory: new Psr17Factory(),
         );
         
         $uploadedFile = $factory->createFromStorageFile(
@@ -101,6 +110,8 @@ class UploadedFileFactoryTest extends TestCase
         $factory = new UploadedFileFactory(
             uploadedFileFactory: new Psr17Factory(),
             streamFactory: new Psr17Factory(),
+            client: new Psr18Client(),
+            requestFactory: new Psr17Factory(),
         );
         
         $uploadedFile = $factory->createFromStorageFile(
