@@ -1,11 +1,11 @@
 # App Media
 
-The app media provides features and services such as:
+The App Media package provides a set of features and services for working with media files, including:
 
-* [responsive images](#picture-feature) using the HTML picture element
+* [responsive images](#picture-feature) using the HTML `<picture>` element
 * [file display](#file-display-feature) and [file download](#file-download-feature)
-* [image editor](#image-editor-feature) to crop, resize and other actions to modify images
-* [upload validator](#upload-validator) to validate uploaded files
+* [image editing](#image-editor-feature) for cropping, resizing, and transforming images
+* [upload validation](#upload-validator) for validating uploaded files
 
 and more ...
 
@@ -20,7 +20,9 @@ and more ...
     - [Features](#features)
         - [File Feature](#file-feature)
         - [File Display Feature](#file-display-feature)
+        - [File Display Signed Feature](#file-display-signed-feature)
         - [File Download Feature](#file-download-feature)
+        - [File Download Signed Feature](#file-download-signed-feature)
         - [Icons Feature](#icons-feature)
         - [Image Editor Feature](#image-editor-feature)
             - [Edit Image](#edit-image)
@@ -101,8 +103,15 @@ The configuration for the media is located in the ```app/config/media.php``` fil
 
 ### File Feature
 
-This feature may be used to retrieve files from a supported [file storage](https://github.com/tobento-ch/app-file-storage). The main aim of this feature is to retrieve file urls.
- 
+This feature provides convenient access to files and file URLs from any supported
+[file storage](https://github.com/tobento-ch/app-file-storage).  
+Its primary purpose is to retrieve file URLs or file objects for internal use within your application.
+
+This feature works with both public and private storages.  
+Private storages are not intended to generate public URLs.  
+When using a private storage, the `File` feature is primarily meant for retrieving
+file objects for further processing within your application, not for producing URLs.
+
 **Requirements**
 
 This feature does not have any requirements.
@@ -214,7 +223,7 @@ In the [media config file](#media-config) you can configure this feature:
 ```php
 'features' => [
     new Feature\FileDisplay(
-        // define the supported storages:
+        // define the supported storages (public-only storages are allowed):
         supportedStorages: ['images'],
         
         // you may change the route uri:
@@ -225,6 +234,11 @@ In the [media config file](#media-config) you can configure this feature:
     ),
 ],
 ```
+
+> **Important**
+>
+> This feature only works with storages of type [**public**](https://github.com/tobento-ch/service-file-storage#public-storage).  
+> Private storages will always result in a **404 Not Found** response.
 
 **Display File**
 
@@ -246,6 +260,68 @@ $router->url('media.file.display', ['storage' => 'images', 'path' => 'path/to/fi
 
 You may check out the [Display And Download Files Using Apps](#display-and-download-files-using-apps) if you want to serve files from a customized app.
 
+### File Display Signed Feature
+
+This feature may be used to securely display a file from a supported [file storage](https://github.com/tobento-ch/app-file-storage) using **signed URLs**.  
+A signed URL ensures that the file can only be accessed when the URL contains a valid cryptographic signature, and optionally an expiration timestamp.
+
+This is ideal for displaying private or protected files such as PDFs, images, or documents that should not be publicly accessible.
+
+**Requirements**
+
+This feature does not have any requirements.
+
+**Install**
+
+In the [media config file](#media-config) you can configure this feature:
+
+```php
+'features' => [
+    new Feature\FileDisplaySigned(
+        // define the supported storages (private-only storages are allowed):
+        supportedStorages: ['uploads-private'],
+        
+        // you may change the route uri:
+        routeUri: 'media/s/file/{storage}/{path*}', // default
+        
+        // you may define a route domain:
+        routeDomain: 'media.example.com', // null is default
+    ),
+],
+```
+
+> **Important**
+>
+> This feature only works with storages of type [**private**](https://github.com/tobento-ch/service-file-storage#private-storage).  
+> Public storages will always result in a **404 Not Found** response.
+
+**Display File**
+
+Once installed, files can only be accessed using a **signed URL**.
+Unsigned URLs will always result in a **403 Forbidden** response.
+
+A typical signed URL looks like:
+
+```
+https://example.com/media/s/file/uploads-private/path/to/file.pdf/{expires}/{signature}
+```
+
+To generate a signed file URL, use the router `url` method and call `sign`:
+
+```php
+use Tobento\Service\Routing\RouterInterface;
+
+$router = $app->get(RouterInterface::class);
+
+$url = $router->url('media.file.display.signed', [
+    'storage' => 'private',
+    'path' => 'path/to/file.pdf',
+])->sign();
+```
+For additional information on signing options and behavior, visit the [Signed URL Generation](https://github.com/tobento-ch/service-routing#signed-url-generation) section.
+
+You may check out the [Display And Download Files Using Apps](#display-and-download-files-using-apps) if you want to serve files from a customized app.
+
 ### File Download Feature
 
 This feature may be used to force downloading a file from a supported [file storage](https://github.com/tobento-ch/app-file-storage) in the user's browser.
@@ -261,7 +337,7 @@ In the [media config file](#media-config) you can configure this feature:
 ```php
 'features' => [
     new Feature\FileDownload(
-        // define the supported storages:
+        // define the supported storages (public-only storages are allowed):
         supportedStorages: ['images'],
         
         // you may change the route uri:
@@ -272,6 +348,11 @@ In the [media config file](#media-config) you can configure this feature:
     ),
 ],
 ```
+
+> **Important**
+>
+> This feature only works with storages of type [**public**](https://github.com/tobento-ch/service-file-storage#public-storage).  
+> Private storages will always result in a **404 Not Found** response.
 
 **Download File**
 
@@ -290,6 +371,68 @@ $router = $app->get(RouterInterface::class);
 
 $router->url('media.file.download', ['storage' => 'images', 'path' => 'path/to/file.jpg']);
 ```
+
+You may check out the [Display And Download Files Using Apps](#display-and-download-files-using-apps) if you want to serve files from a customized app.
+
+### File Download Signed Feature
+
+This feature may be used to securely download a file from a supported [file storage](https://github.com/tobento-ch/app-file-storage) using **signed URLs**.  
+A signed URL ensures that the file can only be accessed when the URL contains a valid cryptographic signature, and optionally an expiration timestamp.
+
+This is ideal for downloading private or protected files such as PDFs, images, or documents that should not be publicly accessible.
+
+**Requirements**
+
+This feature does not have any requirements.
+
+**Install**
+
+In the [media config file](#media-config) you can configure this feature:
+
+```php
+'features' => [
+    new Feature\FileDownloadSigned(
+        // define the supported storages (private-only storages are allowed):
+        supportedStorages: ['uploads-private'],
+        
+        // you may change the route uri:
+        routeUri: 'media/s/download/{storage}/{path*}', // default
+        
+        // you may define a route domain:
+        routeDomain: 'media.example.com', // null is default
+    ),
+],
+```
+
+> **Important**
+>
+> This feature only works with storages of type [**private**](https://github.com/tobento-ch/service-file-storage#private-storage).  
+> Public storages will always result in a **404 Not Found** response.
+
+**Download File**
+
+Once installed, files can only be accessed using a **signed URL**.
+Unsigned URLs will always result in a **403 Forbidden** response.
+
+A typical signed URL looks like:
+
+```
+https://example.com/media/s/download/uploads-private/path/to/file.pdf/{expires}/{signature}
+```
+
+To generate a signed file URL, use the router `url` method and call `sign`:
+
+```php
+use Tobento\Service\Routing\RouterInterface;
+
+$router = $app->get(RouterInterface::class);
+
+$url = $router->url('media.file.download.signed', [
+    'storage' => 'private',
+    'path' => 'path/to/file.pdf',
+])->sign();
+```
+For additional information on signing options and behavior, visit the [Signed URL Generation](https://github.com/tobento-ch/service-routing#signed-url-generation) section.
 
 You may check out the [Display And Download Files Using Apps](#display-and-download-files-using-apps) if you want to serve files from a customized app.
 
@@ -384,7 +527,16 @@ In the ```app/config/logging.php``` file you may define the logger to be used, o
 
 ### Image Editor Feature
 
-This feature may be used to edit images.
+This feature offers a full image-editing interface, making it possible to crop, resize, transform, and adjust images within your application.
+
+> **Important**
+>
+> The Image Editor Feature is intended to be used within an authenticated backend
+> environment, such as applications built with
+> [tobento/app-backend](https://github.com/tobento-ch/app-backend).  
+> The editor loads images in the browser and writes changes back to storage, so
+> access to the editor must be protected by your application's authentication and
+> authorization mechanisms.
 
 **Requirements**
 
@@ -433,7 +585,7 @@ In the [media config file](#media-config) you can configure this feature:
 
 #### Edit Image
 
-Use the ```media.image.editor``` route name to generate the url where you can edit the specified image.
+Use the ```media.image.editor``` route name to generate the URL where you can edit the specified image.
 
 ```php
 $url = $router->url('media.image.editor', ['template' => 'default', 'storage' => 'uploads', 'path' => 'image.jpg']);
@@ -462,13 +614,15 @@ In the [media config file](#media-config) you can configure this feature:
 ```php
 'features' => [
     new Feature\Picture(
-        // Define the storage name where to store the generated picture data.
+        // Define the storage name where the generated picture metadata is stored.
+        // This storage should be private (not publicly accessible).
         pictureStorageName: 'picture-data',
 
-        // Define the storage name where to store each created image. The storage must support urls.
+        // Define the storage name where generated images are stored.
+        // This storage must be public (i.e. support URLs) so the images can be displayed.
         imageStorageName: 'images',
         
-        // Define the queue to be used for generating the images:
+        // Queue used for generating images in the background:
         queueName: 'file',
     ),
 ],
@@ -511,8 +665,17 @@ You may use named definitions to generate images from. Check out the [Picture De
     path: 'path/to/image.jpg',
     resource: 'storage-name',
     definition: 'name',
+    allowPrivateStorage: false, // default
 )->imgAttr('alt', 'Alt Text') ?>
 ```
+
+About `allowPrivateStorage`
+
+Use this when the image source is a *private* storage.  
+(For most cases, using a public storage as the image source is recommended.)
+
+- `false` (default): private storages are not read and a `NullPictureTag` is returned.
+- `true`: allow reading from private storage (useful for backend-only sources such as uploads or protected files).
 
 Depending on your definition this will output:
 
@@ -647,11 +810,22 @@ class SomeService
 
 ### Picture Editor Feature
 
-This feature requires the [Picture Feature](#picture-feature) to be installed.
+This feature provides an interface for editing pictures and their defined variants.  
+It displays all picture definitions along with their preview images, allowing you to crop, resize, transform, and adjust each variant before regenerating them.  
+It requires the [Picture Feature](#picture-feature) to be installed.
+
+> **Important**
+>
+> The Picture Editor Feature is intended to be used within an authenticated backend
+> environment, such as applications built with
+> [tobento/app-backend](https://github.com/tobento-ch/app-backend).  
+> The editor loads images in the browser and writes changes back to storage, so
+> access to the editor must be protected by your application's authentication and
+> authorization mechanisms.
 
 **Requirements**
 
-This features requires:
+This feature requires:
 
 ```
 composer require tobento/app-language
@@ -666,7 +840,7 @@ In the [media config file](#media-config) you can configure this feature:
 ```php
 'features' => [
     new Feature\PictureEditor(
-        // define different image editors templates:
+        // define different image editor templates:
         templates: [
             'default' => [
                 'crop', 'resize', 'fit', // Used for cropping. You may uncomment all if you want to disable cropping.
@@ -712,7 +886,7 @@ $url = $router->url('media.picture.editor', [
 
 **Events**
 
-The ```Tobento\App\Media\Event\PictureEdited``` will dispatch **after** the picture is edited.
+The ```Tobento\App\Media\Event\PictureEdited``` will be dispatched **after** the picture is edited.
 
 ## Services
 
@@ -938,9 +1112,11 @@ You may read the [File Upload Cheatsheet - owasp.org](https://cheatsheetseries.o
 
 ### Uploaded File Factory
 
-The upload file factory may be used to create uploaded files from different resources.
+The uploaded file factory creates PSR-7 `UploadedFileInterface` instances from different resources such as remote URLs or storage files.
 
 ```php
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface as Psr17UploadedFileFactoryInterface;
 use Tobento\App\Media\Upload\UploadedFileFactory;
@@ -949,6 +1125,8 @@ use Tobento\App\Media\Upload\UploadedFileFactoryInterface;
 $factory = new UploadedFileFactory(
     uploadedFileFactory: $uploadedFileFactory, // Psr17UploadedFileFactoryInterface
     streamFactory: $streamFactory, // StreamFactoryInterface
+    client: $client, // ClientInterface (PSR-18)
+    requestFactory: $requestFactory, // RequestFactoryInterface (PSR-17)
 );
 
 var_dump($factory instanceof UploadedFileFactoryInterface);
@@ -957,7 +1135,7 @@ var_dump($factory instanceof UploadedFileFactoryInterface);
 
 **createFromRemoteUrl**
 
-Use the ```createFromRemoteUrl``` method to create an uploaded file from a remote url:
+Creates an uploaded file by downloading the content from a remote URL using a PSR-18 HTTP client.
 
 ```php
 use Psr\Http\Message\UploadedFileInterface;
@@ -975,9 +1153,11 @@ try {
 }
 ```
 
+If the remote request fails or the response status code is not 200, a `CreateUploadedFileException` is thrown.
+
 **createFromStorageFile**
 
-Use the ```createFromStorageFile``` method to create an uploaded file from a [Storage File](https://github.com/tobento-ch/service-file-storage#file-interface):
+Creates an uploaded file from a [Storage File](https://github.com/tobento-ch/service-file-storage#file-interface).
 
 ```php
 use Psr\Http\Message\UploadedFileInterface;
@@ -995,6 +1175,8 @@ try {
     // creating uploaded file failed.
 }
 ```
+
+If the storage file does not provide a stream, a `CreateUploadedFileException` is thrown.
 
 ### Image Processor
 
