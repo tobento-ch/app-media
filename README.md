@@ -531,12 +531,10 @@ This feature offers a full image-editing interface, making it possible to crop, 
 
 > **Important**
 >
-> The Image Editor Feature is intended to be used within an authenticated backend
-> environment, such as applications built with
-> [tobento/app-backend](https://github.com/tobento-ch/app-backend).  
-> The editor loads images in the browser and writes changes back to storage, so
-> access to the editor must be protected by your application's authentication and
-> authorization mechanisms.
+> The Image Editor loads images in the browser and writes changes back to storage.  
+> For security reasons, access to the editor is protected by a permission check.  
+> By default, the required permission is **`media.image.editor`**.  
+> You may override this permission, but disabling permission checks is not recommended.
 
 **Requirements**
 
@@ -816,12 +814,10 @@ It requires the [Picture Feature](#picture-feature) to be installed.
 
 > **Important**
 >
-> The Picture Editor Feature is intended to be used within an authenticated backend
-> environment, such as applications built with
-> [tobento/app-backend](https://github.com/tobento-ch/app-backend).  
-> The editor loads images in the browser and writes changes back to storage, so
-> access to the editor must be protected by your application's authentication and
-> authorization mechanisms.
+> The Picture Editor loads images in the browser and writes changes back to storage.  
+> For security reasons, access to the editor is protected by a permission check.  
+> By default, the required permission is **`media.picture.editor`**.  
+> You may override this permission, but disabling permission checks is not recommended.
 
 **Requirements**
 
