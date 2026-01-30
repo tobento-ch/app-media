@@ -51,8 +51,15 @@ class MediaFiles implements MigrationInterface
                 description: 'Media picture definitions.',
             ),
             new DirCopy(
-                dir: $resources.'uploads/',
-                destDir: $this->dirs->get('app').'storage/uploads/',
+                dir: $resources.'uploads-private/',
+                destDir: $this->dirs->get('app').'storage/uploads-private/',
+                name: 'Media upload files',
+                type: 'uploads',
+                description: 'Media upload files.',
+            ),
+            new DirCopy(
+                dir: $resources.'uploads-public/',
+                destDir: $this->dirs->get('app').'storage/uploads-public/',
                 name: 'Media upload files',
                 type: 'uploads',
                 description: 'Media upload files.',
