@@ -48,7 +48,7 @@ class ImageWriterTest extends TestCase
         $writeResponse = $writer->write(
             path: 'image.jpg',
             stream: Factory::createStreamFactory()->createStreamFromFile(
-                filename: __DIR__.'/../../resources/uploads/image.jpg'
+                filename: __DIR__.'/../../resources/uploads-private/image.jpg'
             ),
             originalFilename: 'orgfilename.jpg',
         );
@@ -76,7 +76,7 @@ class ImageWriterTest extends TestCase
         $writeResponse = $writer->write(
             path: 'foo/bar/image.jpg',
             stream: Factory::createStreamFactory()->createStreamFromFile(
-                filename: __DIR__.'/../../resources/uploads/image.jpg'
+                filename: __DIR__.'/../../resources/uploads-private/image.jpg'
             ),
             originalFilename: 'orgfilename.jpg',
         );

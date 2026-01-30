@@ -29,18 +29,18 @@ class FileWriterTest extends TestCase
 {
     public function setUp(): void
     {
-        (new Dir())->delete(__DIR__.'/../tmp/file-storage/uploads/');
+        (new Dir())->delete(__DIR__.'/../tmp/file-storage/uploads-private/');
     }
 
     public function tearDown(): void
     {
-        (new Dir())->delete(__DIR__.'/../tmp/file-storage/uploads/');
+        (new Dir())->delete(__DIR__.'/../tmp/file-storage/uploads-private/');
     }
     
     public function testImplementsFileWriterInterface()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
         );
         
         $this->assertInstanceof(FileWriterInterface::class, $fileWriter);
@@ -48,7 +48,7 @@ class FileWriterTest extends TestCase
     
     public function testWriteFromStreamMethodWritesToFileStorage()
     {
-        $storage = Factory::createFileStorage(name: 'uploads');
+        $storage = Factory::createFileStorage(name: 'uploads-private');
         
         $fileWriter = new FileWriter(
             storage: $storage,
@@ -72,7 +72,7 @@ class FileWriterTest extends TestCase
     
     public function testWriteUploadedFileMethodWritesToFileStorage()
     {
-        $storage = Factory::createFileStorage(name: 'uploads');
+        $storage = Factory::createFileStorage(name: 'uploads-private');
         
         $fileWriter = new FileWriter(
             storage: $storage,
@@ -99,7 +99,7 @@ class FileWriterTest extends TestCase
     public function testFilenamesUsingAlnum()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             filenames: FileWriter::ALNUM,
         );
         
@@ -116,7 +116,7 @@ class FileWriterTest extends TestCase
     public function testFilenamesUsingRename()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             filenames: FileWriter::RENAME,
         );
         
@@ -133,7 +133,7 @@ class FileWriterTest extends TestCase
     public function testFilenamesUsingKeep()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             filenames: FileWriter::KEEP,
         );
         
@@ -150,7 +150,7 @@ class FileWriterTest extends TestCase
     public function testFilenamesUsingClosure()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             filenames: function (string $filename): string {
                 return 'custom';
             },
@@ -169,7 +169,7 @@ class FileWriterTest extends TestCase
     public function testDublicatesRename()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             duplicates: FileWriter::RENAME,
         );
         
@@ -191,7 +191,7 @@ class FileWriterTest extends TestCase
     public function testDublicatesOverwrite()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             duplicates: FileWriter::OVERWRITE,
         );
         
@@ -212,7 +212,7 @@ class FileWriterTest extends TestCase
         $this->expectExceptionMessage('Not allowed to overwrite the file :path.');
         
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             duplicates: 'invalid',
         );
         
@@ -225,7 +225,7 @@ class FileWriterTest extends TestCase
     public function testFoldersUsingAlnum()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             folders: FileWriter::ALNUM,
         );
         
@@ -242,7 +242,7 @@ class FileWriterTest extends TestCase
     public function testFoldersUsingClosure()
     {
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             folders: function (string $path): string {
                 return 'custom';
             },
@@ -264,7 +264,7 @@ class FileWriterTest extends TestCase
         $this->expectExceptionMessage('Allowed folder depth of :num exceeded for the folder :path.');
         
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads'),
+            storage: Factory::createFileStorage(name: 'uploads-private'),
             folderDepthLimit: 2,
         );
         
@@ -277,7 +277,7 @@ class FileWriterTest extends TestCase
     
     public function testUsingWriters()
     {
-        $storage = Factory::createFileStorage(name: 'uploads');
+        $storage = Factory::createFileStorage(name: 'uploads-private');
         
         $fileWriter = new FileWriter(
             storage: $storage,
@@ -295,7 +295,7 @@ class FileWriterTest extends TestCase
         
         $writeResponse = $fileWriter->writeFromStream(
             stream: Factory::createStreamFactory()->createStreamFromFile(
-                filename: __DIR__.'/../resources/uploads/image.jpg'
+                filename: __DIR__.'/../resources/uploads-private/image.jpg'
             ),
             filename: 'image.jpg',
             folderPath: '',
