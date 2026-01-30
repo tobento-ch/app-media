@@ -60,7 +60,7 @@ class ImageProcessorTest extends TestCase
     public function testProcessFromResourceMethod()
     {
         $encoded = (new ImageProcessor())->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertInstanceof(Encoded::class, $encoded);
@@ -76,7 +76,7 @@ class ImageProcessorTest extends TestCase
     public function testProcessFromStreamMethod()
     {
         $encoded = (new ImageProcessor())->processFromStream(
-            stream: Factory::createStreamFactory()->createStream(file_get_contents(__DIR__.'/../resources/uploads/image.jpg')),
+            stream: Factory::createStreamFactory()->createStream(file_get_contents(__DIR__.'/../resources/uploads-private/image.jpg')),
         );
         
         $this->assertInstanceof(Encoded::class, $encoded);
@@ -103,7 +103,7 @@ class ImageProcessorTest extends TestCase
         $this->expectException(UnsupportedImageException::class);
         
         $encoded = (new ImageProcessor(supportedMimeTypes: ['image/gif']))->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
     }
     
@@ -117,7 +117,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertNotEmpty($encoded->encoded());
@@ -143,7 +143,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertSame(2, count($encoded->actions()->all()));
@@ -170,7 +170,7 @@ class ImageProcessorTest extends TestCase
         $processor->setLogger($logger);
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertTrue($testHandler->hasRecord('Disallowed action '.Action\Resize::class.' skipped', Level::Notice));
@@ -189,7 +189,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertSame(2, count($encoded->actions()->all()));
@@ -216,7 +216,7 @@ class ImageProcessorTest extends TestCase
         $processor->setLogger($logger);
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertTrue($testHandler->hasRecord('Disallowed action '.Action\Resize::class.' skipped', Level::Notice));
@@ -234,7 +234,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertSame(1, count($encoded->actions()->all()));
@@ -256,7 +256,7 @@ class ImageProcessorTest extends TestCase
         $processor->setLogger($logger);
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertTrue($testHandler->hasRecord('Unable to create action resize', Level::Notice));
@@ -270,7 +270,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertSame('image/gif', $encoded->mimeType());
@@ -285,7 +285,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertSame('image/jpeg', $encoded->mimeType());
@@ -301,7 +301,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
         
         $this->assertSame('image/jpeg', $encoded->mimeType());
@@ -316,7 +316,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
 
         $this->assertSame(33, $encoded->actions()->all()[1]->quality());
@@ -330,7 +330,7 @@ class ImageProcessorTest extends TestCase
         );
         
         $encoded = $processor->processFromResource(
-            resource: new File(__DIR__.'/../resources/uploads/image.jpg'),
+            resource: new File(__DIR__.'/../resources/uploads-private/image.jpg'),
         );
 
         $this->assertSame(90, $encoded->actions()->all()[1]->quality());
