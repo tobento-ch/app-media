@@ -13,15 +13,14 @@ declare(strict_types=1);
  
 namespace Tobento\App\Media\Upload;
 
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface as Psr17UploadedFileFactoryInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Tobento\App\Media\Exception\CreateUploadedFileException;
 use Tobento\Service\FileStorage\FileInterface;
 
-/**
- * UploadedFileFactory
- */
 class UploadedFileFactory implements UploadedFileFactoryInterface
 {
     /**
@@ -29,10 +28,14 @@ class UploadedFileFactory implements UploadedFileFactoryInterface
      *
      * @param Psr17UploadedFileFactoryInterface $uploadedFileFactory
      * @param StreamFactoryInterface $streamFactory
+     * @param ClientInterface $client
+     * @param RequestFactoryInterface $requestFactory
      */
     public function __construct(
         protected Psr17UploadedFileFactoryInterface $uploadedFileFactory,
         protected StreamFactoryInterface $streamFactory,
+        protected ClientInterface $client,
+        protected RequestFactoryInterface $requestFactory,
     ) {}
     
     /**
@@ -44,34 +47,26 @@ class UploadedFileFactory implements UploadedFileFactoryInterface
      */
     public function createFromRemoteUrl(string $url): UploadedFileInterface
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $ret = curl_exec($ch);
+        $request = $this->requestFactory->createRequest('GET', $url);
 
-        if (empty($ret)) {
-            $error = curl_error($ch);
-            curl_close($ch);
-            
+        try {
+            $response = $this->client->sendRequest($request);
+        } catch (\Throwable $e) {
             throw new CreateUploadedFileException(
                 message: 'Creating uploaded file from remote file :url failed: :error',
-                parameters: [':url' => $url, ':error' => $error],
+                parameters: [':url' => $url, ':error' => $e->getMessage()],
             );
         }
-        
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($httpCode !== 200) {
+
+        if ($response->getStatusCode() !== 200) {
             throw new CreateUploadedFileException(
                 message: 'Creating uploaded file from remote file :url failed as not found.',
                 parameters: [':url' => $url],
             );
         }
-        
-        $stream = $this->streamFactory->createStream((string)$ret);
-        
+
+        $stream = $response->getBody();
+
         return $this->uploadedFileFactory->createUploadedFile(
             stream: $stream,
             size: (int) $stream->getSize(),
