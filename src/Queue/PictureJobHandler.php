@@ -18,9 +18,6 @@ use Tobento\Service\Queue\JobHandlerInterface;
 use Tobento\Service\Queue\JobInterface;
 use Tobento\Service\Queue\JobException;
 
-/**
- * PictureJobHandler
- */
 class PictureJobHandler implements JobHandlerInterface
 {
     /**
@@ -47,6 +44,7 @@ class PictureJobHandler implements JobHandlerInterface
                 resource: unserialize($job->getPayload()['resource']),
                 definition: unserialize($job->getPayload()['definition']),
                 queue: false,
+                allowPrivateStorage: true,
             );
             
             return;
@@ -57,6 +55,7 @@ class PictureJobHandler implements JobHandlerInterface
             resource: unserialize($job->getPayload()['resource']),
             definition: unserialize($job->getPayload()['definition']),
             queue: false,
+            allowPrivateStorage: true,
         );
     }
 }
