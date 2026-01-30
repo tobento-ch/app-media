@@ -50,13 +50,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/unknown/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/unknown/uploads-public/image.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -65,7 +65,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads', 'foo'],
+                supportedStorages: ['uploads-public', 'foo'],
                 userPermission: null,
             ),
         ]);
@@ -86,7 +86,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -95,13 +95,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads/unknown.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads-public/unknown.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -110,13 +110,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads/executable.php');
+        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads-public/executable.php');
         
         $http->response()->assertStatus(404);
     }
@@ -125,12 +125,12 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(403);
     }
@@ -139,13 +139,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()
             ->assertStatus(200)
@@ -161,13 +161,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
                 templates: [
                     'custom' => ['background'],
                 ],
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/custom/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/custom/uploads-public/image.jpg');
         
         $http->response()->assertStatus(200);
     }
@@ -179,13 +179,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
                 templates: [
                     'default' => ['background'],
                 ],
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()
             ->assertStatus(200)
@@ -197,14 +197,14 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
                 localizeRoute: true,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'GET', uri: 'de/media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'GET', uri: 'de/media/image-editor/default/uploads-public/image.jpg');
         
         $app = $this->getApp();
         $app->on(LanguagesInterface::class, function() {
@@ -224,13 +224,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads/image.jpg')
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads-public/image.jpg')
             ->body([
                 'actions' => [
                     'brightness' => ['brightness' => '20'],
@@ -256,13 +256,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/unknown/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/unknown/uploads-public/image.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -271,7 +271,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads', 'foo'],
+                supportedStorages: ['uploads-public', 'foo'],
                 userPermission: null,
             ),
         ]);
@@ -292,7 +292,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -301,13 +301,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads/unknown.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads-public/unknown.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -316,13 +316,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads/executable.php');
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads-public/executable.php');
         
         $http->response()->assertStatus(404);
     }
@@ -331,12 +331,12 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(403);
     }
@@ -346,14 +346,14 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
         // will fail as unsupported mime type.
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
                 supportedMimeTypes: ['image/gif'],
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor-preview/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(422);
     }
@@ -362,7 +362,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
@@ -370,7 +370,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
         $events = $this->fakeEvents();
         $http = $this->fakeHttp();
         $http->previousUri('prev-uri');
-        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads/image.jpg')
+        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads-public/image.jpg')
             ->body([
                 'actions' => [
                     'brightness' => ['brightness' => '20'],
@@ -379,7 +379,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
             ]);
         
         $app = $this->bootingApp();
-        $storage = $app->get(StoragesInterface::class)->get('uploads');
+        $storage = $app->get(StoragesInterface::class)->get('uploads-public');
         $storage->delete(path: 'image.gif');
         
         $http->response()
@@ -387,7 +387,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
             ->assertLocation(uri: 'prev-uri');
 
         $events->assertDispatched(Event\ImageEdited::class, static function(Event\ImageEdited $event): bool {
-            return $event->storageName() === 'uploads'
+            return $event->storageName() === 'uploads-public'
                 && $event->file()->path() === 'image.jpg';
         });
         
@@ -399,13 +399,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor/unknown/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor/unknown/uploads-public/image.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -414,7 +414,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads', 'foo'],
+                supportedStorages: ['uploads-public', 'foo'],
                 userPermission: null,
             ),
         ]);
@@ -435,7 +435,7 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -444,13 +444,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads/unknown.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads-public/unknown.jpg');
         
         $http->response()->assertStatus(404);
     }
@@ -459,13 +459,13 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads/executable.php');
+        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads-public/executable.php');
         
         $http->response()->assertStatus(404);
     }
@@ -474,12 +474,12 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
     {
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(403);
     }
@@ -489,14 +489,14 @@ class ImageEditorTest extends \Tobento\App\Testing\TestCase
         // will fail as unsupported mime type.
         $this->fakeConfig()->with('media.features', [
             new ImageEditor(
-                supportedStorages: ['uploads'],
+                supportedStorages: ['uploads-public'],
                 userPermission: null,
                 supportedMimeTypes: ['image/gif'],
             ),
         ]);
         
         $http = $this->fakeHttp();
-        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads/image.jpg');
+        $http->request(method: 'POST', uri: 'media/image-editor/default/uploads-public/image.jpg');
         
         $http->response()->assertStatus(422);
     }
