@@ -23,12 +23,12 @@ use Tobento\App\Http\Exception\NotFoundException;
 use Tobento\Service\FileStorage\FileNotFoundException;
 use Tobento\Service\FileStorage\StoragesInterface;
 use Tobento\Service\Routing\RouterInterface;
+use Tobento\Service\Support\Str;
 
-/**
- * FileDisplay
- */
 class FileDisplay extends Boot implements FeatureInterface
 {
+    use Traits\RestrictStorageTypesTrait;
+    
     public const INFO = [
         'boot' => [
             'display files from file storages',
@@ -45,6 +45,11 @@ class FileDisplay extends Boot implements FeatureInterface
         // FILE:
         \Tobento\App\FileStorage\Boot\FileStorage::class,
     ];
+    
+    /**
+     * @var array<int, string>
+     */
+    protected array $allowedStorageTypes = ['public'];
     
     /**
      * Create a new FileDisplay instance.
@@ -130,6 +135,12 @@ class FileDisplay extends Boot implements FeatureInterface
             throw new NotFoundException();
         }
         
+        $this->restrictStorageTypes(
+            storage: $storage,
+            allowedStorageTypes: $this->allowedStorageTypes,
+            exception: static fn () => new NotFoundException(),
+        );
+        
         if (! $storage->exists(path: $path)) {
             throw new NotFoundException();
         }
@@ -143,7 +154,14 @@ class FileDisplay extends Boot implements FeatureInterface
         return $responseFactory->createResponse(200)
             ->withHeader('X-Exclude-Previous-Uri', '1')
             ->withHeader('Content-Type', (string)$file->mimeType())
-            ->withHeader('Content-Disposition', 'inline; filename='.$file->name())
+            ->withHeader(
+                'Content-Disposition',
+                sprintf(
+                    "inline; filename=\"%s\"; filename*=UTF-8''%s",
+                    $this->asciiFallback($file->name()),
+                    rawurlencode($file->name())
+                )
+            )
             ->withHeader('Content-Length', (string)$file->size())
             ->withBody($file->stream());
     }
@@ -157,5 +175,23 @@ class FileDisplay extends Boot implements FeatureInterface
     protected function supportsStorage(string $storage): bool
     {
         return in_array($storage, $this->supportedStorages);
+    }
+    
+    /**
+     * Returns an ASCII-only fallback filename for use in the
+     * Content-Disposition header. Any non-ASCII characters are
+     * replaced with underscores to ensure broad browser compatibility.
+     *
+     * @param string $filename The original filename.
+     * @return string The sanitized ASCII fallback filename.
+     */
+    protected function asciiFallback(string $filename): string
+    {
+        $info = pathinfo($filename);
+
+        $name = Str::slug($info['filename'], '-');
+        $ext  = isset($info['extension']) ? '.' . $info['extension'] : '';
+
+        return $name . $ext;
     }
 }
