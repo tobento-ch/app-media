@@ -27,7 +27,8 @@ class Factory
     public static function createFileStorage(
         string $name,
         null|string $folder = null,
-        $withPublicUrl = true
+        bool $withPublicUrl = true,
+        string $type = 'public',
     ): StorageInterface {
         $factory = new FilesystemStorageFactory(streamFactory: new Psr17Factory());
         $folder = $folder ?: $name;
@@ -38,6 +39,8 @@ class Factory
         if ($withPublicUrl) {
             $config['public_url'] = 'https://www.example.com/files/'.$folder;
         }
+        
+        $config['storage_type'] = $type;
         
         return $factory->createStorage(name: $name, config: $config);
     }
