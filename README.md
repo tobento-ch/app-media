@@ -34,7 +34,14 @@ and more ...
             - [Edit Picture](#edit-picture)
     - [Services](#services)
         - [File Writer](#file-writer)
-        - [Upload Validator](#upload-validator)
+        - [Copy Mode (CopyFileWrapper)](#copy-mode-copyfilewrapper)
+        - [Upload Validators](#upload-validators)
+            - [Upload Validator](#upload-validator)
+            - [Upload CSV Validator](#upload-csv-validator)
+            - [Upload NDJSON Validator](#upload-ndjson-validator)
+            - [Upload PDF Validator](#upload-pdf-validator)
+            - [Upload ZIP Validator](#upload-zip-validator)
+            - [Upload Combine Validator](#upload-combine-validator)
         - [Uploaded File Factory](#uploaded-file-factory)
         - [Image Processor](#image-processor)
     - [Learn More](#learn-more)
@@ -985,6 +992,35 @@ var_dump($writeResponse instanceof WriteResponseInterface);
 
 It is highly recommended to use the [Upload Validator](#upload-validator) before writing the uploaded file to the file storage.
 
+**copyFile**
+
+Use the `copyFile` method to copy an existing file inside the same file storage to a new folder.
+This is useful when selecting files from a file manager or when you want to duplicate files without re-uploading or re-processing them.
+
+```php
+use Tobento\App\Media\Exception\WriteException;
+use Tobento\App\Media\FileStorage\WriteResponseInterface;
+
+use Tobento\App\Media\Exception\WriteException;
+use Tobento\App\Media\FileStorage\WriteResponseInterface;
+
+$writeResponse = $fileWriter->copyFile(
+    path: 'foo/image.jpg', // existing file path inside the storage
+    folderPath: 'path/to', // target folder, or an empty string for root
+);
+
+// Result: 'path/to/image.jpg'
+// Note: copyFile() does NOT preserve the source folder structure.
+
+var_dump($writeResponse instanceof WriteResponseInterface);
+// bool(true)
+
+// throws WriteException if copying failed!
+```
+
+This method performs a storage-level copy (e.g. local to local, S3 to S3) without reading streams or applying any image processing.
+It is ideal for file-manager selections or fast, lossless duplication.
+
 **writeResponse**
 
 ```php
@@ -1011,27 +1047,55 @@ $messages = $writeResponse->messages();
 // MessagesInterface
 ```
 
-### Upload Validator
+### Copy Mode (CopyFileWrapper)
 
-The upload validator validates the given uploaded file.
+Copy mode can be used when you want to copy an existing file inside the same [file storage](https://github.com/tobento-ch/app-file-storage) instead of uploading a new one.  
+A `CopyFileWrapper` contains:
+
+- the original `UploadedFileInterface` (metadata only)
+- the storage name where the file currently exists
+- the path of the file inside that storage
+    
+```php
+use Tobento\App\Media\Upload\CopyFileWrapper;
+
+if ($inputFile instanceof CopyFileWrapper) {
+    $writeResponse = $writer->copyFile(
+        sourcePath: $inputFile->path(),
+        folderPath: $folderPath,
+    );
+} else {
+    $writeResponse = $writer->writeUploadedFile($inputFile, $folderPath);
+}
+```
+
+### Upload Validators
+
+#### Upload Validator
+
+The upload validator validates a given uploaded file against a set of configurable security and consistency rules.
 
 ```php
 use Tobento\App\Media\Upload\Validator;
 use Tobento\App\Media\Upload\ValidatorInterface;
 
 $validator = new Validator(
-    // Define the allowed file extensions:
+    // Allowed file extensions:
     allowedExtensions: ['jpg', 'png', 'gif', 'webp'],
     
-    // Define if you want to allow only strict filename characters
-    // which are alphanumeric characters, hyphen, spaces, and periods:
+    // Whether to restrict filenames to alphanumeric characters,
+    // hyphens, underscores, spaces, and periods:
     strictFilenameCharacters: true, // default
     
-    // Define the max. filename length:
+    // Maximum allowed filename length:
     maxFilenameLength: 255, // default
     
-    // You may define the max. file size in bytes or null (unlimited).
+    // Maximum file size in kilobytes (null = unlimited):
     maxFileSizeInKb: 2000,
+    
+    // Whether to validate the client-provided media type
+    // against the detected mime type (disabled by default):
+    validateClientMediaType: true,
 );
 
 var_dump($validator instanceof ValidatorInterface);
@@ -1057,20 +1121,26 @@ try {
 
 #### Security
 
-The validator validates that
+The validator ensures that:
 
-* the file extension and mime type detected by its content is allowed
-* the client filename extension, client media type of the file is consistent with its content
-* the filename consists only of alphanumeric characters, hyphen, spaces, and periods if ```strictFilenameCharacters``` is set to ```true``` (default)
-* the filename length does not exceed the defined ```maxFilenameLength``` parameter
-* the file size does not exceed the defined ```maxFileSizeInKb``` parameter. Default is ```null``` unlimited
+- the file extension is allowed
+- the mime type detected from the file's content is allowed
+- the client filename extension is consistent with the file's content
+- the client media type is consistent with the detected mime type  
+  (only if `validateClientMediaType` is enabled)
+- the filename contains only alphanumeric characters, hyphens, underscores, spaces, and periods  
+  (if `strictFilenameCharacters` is `true`)
+- the filename length does not exceed the configured `maxFilenameLength`
+- the file size does not exceed the configured `maxFileSizeInKb`  
+  (default: `null` = unlimited)
 
-Once the uploaded file is validated and valid, you can be sure that
+Once the uploaded file is validated and accepted, you can rely on:
 
-* the ```$uploadedFile->getClientMediaType()``` is allowed, consistent with its file content and extension
-* the ```$uploadedFile->getClientFilename()``` file extension is allowed and consistent with its file content
+- `$uploadedFile->getClientMediaType()` being allowed and consistent with the file content  
+  (if strict client media type validation is enabled)
+- `$uploadedFile->getClientFilename()` having a valid and consistent extension
 
-The only thing you have to take care of is the filename except the extension:
+The only remaining responsibility is verifying the filename itself, excluding the extension:
 
 ```php
 $filename = $uploadedFile->getClientFilename();
@@ -1079,7 +1149,7 @@ $extension = pathinfo($filename, PATHINFO_EXTENSION);
 // is valid as verified
 ```
 
-If you use the [File Writer](#file-writer) to store files, make sure the ```filenames``` parameter is configured safely.
+If you use the [File Writer](#file-writer) to store files, ensure the ```filenames``` parameter is configured safely.
 
 ```php
 use Tobento\App\Media\FileStorage\FileWriter;
@@ -1100,11 +1170,184 @@ $fileWriter = new FileWriter(
 
 **File Storage Location**
 
-Always store uploaded files outside the webroot or on a different host. If using the [File Writer](#file-writer) to store files, make sure your defined ```storage``` is outside the webroot such as the default configured ```uploads``` storage.
+Always store uploaded files outside the webroot or on a separate host.  
+If you use the [File Writer](#file-writer), ensure the configured `storage` location is outside the webroot - such as the default ```uploads-private``` or ```uploads-public``` storage.
 
 **Resources**
 
-You may read the [File Upload Cheatsheet - owasp.org](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html).
+For further guidance on secure file uploads, refer to:  
+[File Upload Cheatsheet - owasp.org](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html).
+
+#### Upload CSV Validator
+
+The CSV validator extends the base [upload validator](#upload-validator) with additional CSV-specific security checks.  
+It ensures that uploaded CSV files are structurally valid, safe to process, and free from spreadsheet-formula injection.
+
+```php
+use Tobento\App\Media\Exception\UploadedFileException;
+use Tobento\App\Media\Upload\CsvValidator;
+use Tobento\App\Media\Upload\ValidatorInterface;
+
+$validator = new CsvValidator(
+    allowedExtensions: ['csv'],
+);
+
+// Disable deep CSV content validation if needed returning a new instance:
+$validator = $validator->withValidateCsvContent(false);
+
+var_dump($validator instanceof ValidatorInterface);
+// bool(true)
+
+try {
+    $validator->validateUploadedFile($uploadedFile);
+} catch (UploadedFileException $e) {
+    // CSV validation failed.
+}
+```
+
+**CSV-Specific Security**
+
+The CSV validator ensures:
+- the file extension is csv
+- the detected mime type is one of the allowed CSV mime types: text/csv, text/plain, application/csv, application/vnd.ms-excel
+- the CSV can be parsed line-by-line
+- all rows have a consistent number of columns
+- no cell begins with =, +, -, or @ (prevents spreadsheet formula injection)
+- UTF-8 BOM is handled correctly
+- empty lines are ignored safely
+
+#### Upload NDJSON Validator
+
+The NDJSON validator extends the base [upload validator](#upload-validator) with line-by-line JSON validation.  
+It ensures that uploaded NDJSON files contain **one valid JSON object per line**, ignore empty lines, and safely reject malformed entries.
+
+```php
+use Tobento\App\Media\Exception\UploadedFileException;
+use Tobento\App\Media\Upload\NdjsonValidator;
+use Tobento\App\Media\Upload\ValidatorInterface;
+
+$validator = new NdjsonValidator(
+    allowedExtensions: ['ndjson'],
+);
+
+var_dump($validator instanceof ValidatorInterface);
+// bool(true)
+
+try {
+    $validator->validateUploadedFile($uploadedFile);
+} catch (UploadedFileException $e) {
+    // NDJSON validation failed.
+}
+```
+
+#### Upload PDF Validator
+
+The PDF validator extends the base [upload validator](#upload-validator) with additional PDF-specific security checks.  
+It ensures that uploaded PDF files are structurally safe by detecting features commonly used for malicious behavior, such as JavaScript, embedded files, encryption, and auto-execution actions.
+
+```php
+use Tobento\App\Media\Exception\UploadedFileException;
+use Tobento\App\Media\Upload\PdfValidator;
+use Tobento\App\Media\Upload\ValidatorInterface;
+
+$validator = new PdfValidator(
+    allowedExtensions: ['pdf'],
+);
+
+var_dump($validator instanceof ValidatorInterface);
+// bool(true)
+
+try {
+    $validator->validateUploadedFile($uploadedFile);
+} catch (UploadedFileException $e) {
+    // PDF validation failed.
+}
+```
+
+#### Upload ZIP Validator
+
+The ZIP validator extends the base [upload validator](#upload-validator) with archive-specific security checks.  
+It ensures that uploaded ZIP files are safe to extract, structurally valid, and free from common archive-based attack vectors such as ZIP bombs, directory traversal, and excessive nesting.
+
+```php
+use Tobento\App\Media\Exception\UploadedFileException;
+use Tobento\App\Media\Upload\ZipValidator;
+use Tobento\App\Media\Upload\ValidatorInterface;
+
+$validator = new ZipValidator(
+    allowedExtensions: ['zip'],
+);
+
+// Configure optional ZIP-specific limits returning a new instance:
+$validator = $validator
+    ->withMaxEntries(1000) // Maximum number of files inside the ZIP (default: 2000)
+    ->withMaxTotalUncompressedBytes(10_000) // Total uncompressed size limit (default: 50_000_000 (50 MB))
+    ->withMaxCompressionRatio(20) // Prevent ZIP bombs (default: 200)
+    ->withMaxDepth(1); // Maximum nested ZIP depth (default: 3)
+
+var_dump($validator instanceof ValidatorInterface);
+// bool(true)
+
+try {
+    $validator->validateUploadedFile($uploadedFile);
+} catch (UploadedFileException $e) {
+    // ZIP validation failed.
+}
+```
+
+**ZIP-Specific Security Features**
+
+The `ZipValidator` performs several safety checks to ensure uploaded archives are safe to process:
+
+- **Maximum entry count**  
+  Prevents ZIP files containing thousands of entries, which can overwhelm extraction routines.
+
+- **Maximum total uncompressed size**  
+  Protects against ZIP bombs that expand to massive sizes when extracted.
+
+- **Maximum compression ratio**  
+  Detects malicious archives with extreme compression ratios.
+
+- **Directory traversal protection**  
+  Blocks unsafe paths such as:
+```text
+../evil.txt
+../../etc/passwd
+```
+
+- **Nested ZIP depth**  
+  Controls how many layers of ZIP-within-ZIP are allowed. Useful for preventing recursive archive bombs.
+
+- **In-memory nested ZIP validation**  
+  Nested ZIPs are validated using an internal in‑memory uploaded file implementation, without writing to disk.
+
+#### Upload Combine Validator
+
+The combine validator allows you to register multiple validators and automatically dispatches validation to the first validator that supports the file's extension.
+
+This is ideal when your application accepts multiple file types, each with its own specialized validator.
+
+```php
+use Tobento\App\Media\Exception\UploadedFileException;
+use Tobento\App\Media\Upload\CombineValidator;
+use Tobento\App\Media\Upload\CsvValidator;
+use Tobento\App\Media\Upload\Validator;
+use Tobento\App\Media\Upload\ValidatorInterface;
+
+$validator = new CombineValidator(
+    new CsvValidator(allowedExtensions: ['csv']), // handles .csv
+    new Validator(), // fallback for all other extensions
+);
+
+var_dump($validator instanceof ValidatorInterface);
+// bool(true)
+
+try {
+    $validator->validateUploadedFile($uploadedFile);
+} catch (UploadedFileException $e) {
+    // no matching validator or validation failed
+}
+```
 
 ### Uploaded File Factory
 
