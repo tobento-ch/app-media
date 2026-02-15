@@ -19,9 +19,6 @@ use Psr\Http\Message\UploadedFileInterface;
 use Tobento\App\Media\Exception\UploadedFileErrorException;
 use Tobento\App\Media\Exception\UploadedFileException;
 
-/**
- * Validator
- */
 class Validator implements ValidatorInterface
 {
     /**
@@ -31,13 +28,25 @@ class Validator implements ValidatorInterface
      * @param bool $strictFilenameCharacters
      * @param int $maxFilenameLength
      * @param null|int $maxFileSizeInKb Null unlimited
+     * @param bool $validateClientMediaType
      */
     public function __construct(
         protected array $allowedExtensions = ['jpg', 'png', 'gif', 'webp'],
         protected bool $strictFilenameCharacters = true,
         protected int $maxFilenameLength = 255,
         protected null|int $maxFileSizeInKb = null,
+        protected bool $validateClientMediaType = false,
     ) {}
+    
+    /**
+     * Returns the file extensions handled by this specialized CSV validator (lowercase, without dot).
+     *
+     * @return array<int, string>
+     */
+    public function supportsExtensions(): array
+    {
+        return [];
+    }
     
     /**
      * Validates the uploaded file.
@@ -48,16 +57,34 @@ class Validator implements ValidatorInterface
      */
     public function validateUploadedFile(UploadedFileInterface $file): void
     {
+        // Check for PHP upload errors (UPLOAD_ERR_*)
         $this->validateFileError($file);
         
+        // Validate filename characters if enabled
         if ($this->strictFilenameCharacters) {
             $this->validateFilenameCharacters($file);
         }
-                
+        
+        // Validate filename length
         $this->validateFilenameLength($file, $this->maxFilenameLength);
         
-        $this->validateMimeTypeAndExtension($file, $this->allowedExtensions);
+        // Extract filename + extension
+        [, $extension] = $this->extractFilenameAndExtension($file);
         
+        // Validate extension allowed
+        $this->validateExtensionAllowed($file, $extension, $this->allowedExtensions);
+        
+        // Validate mime type
+        $detectedMime = $this->detectMimeType($file);
+        $allowedMimes = $this->lookupMimeTypes($extension, $file);
+
+        $this->validateMimeTypeConsistency($file, $detectedMime, $allowedMimes);
+        
+        if ($this->validateClientMediaType) {
+            $this->validateClientMediaTypeConsistency($file, $detectedMime, $allowedMimes);
+        }
+
+        // Validate file size
         $this->validateFileSize($file, $this->maxFileSizeInKb);
     }
     
@@ -120,63 +147,89 @@ class Validator implements ValidatorInterface
     }
     
     /**
-     * Validates that the file mime type and extension.
+     * Validates that the file extension is allowed.
      *
      * @param UploadedFileInterface $file
+     * @param string $extension
      * @param array<array-key, string> $allowedExtensions
      * @return void
      * @throws UploadedFileException
      */
-    protected function validateMimeTypeAndExtension(
+    protected function validateExtensionAllowed(
         UploadedFileInterface $file,
+        string $extension,
         array $allowedExtensions
     ): void {
-        $filename = (string)$file->getClientFilename();
-        $fileExtension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        
-        // Check that the extension is allowed:
-        if (!in_array($fileExtension, $allowedExtensions)) {
+        if (!in_array($extension, $allowedExtensions, true)) {
             throw new UploadedFileException(
                 uploadedFile: $file,
                 message: 'The extension :extension of the file :name is disallowed. Allowed extensions are :extensions.',
                 parameters: [
-                    ':extension' => $fileExtension,
+                    ':extension' => $extension,
                     ':name' => (string)$file->getClientFilename(),
                     ':extensions' => implode(',', $allowedExtensions),
                 ],
             );
         }
-        
-        // Check that the extension of the file is consistent with its content
-        // and the mime type is valid:
-        $fileMimeType = $this->detectMimeType($file);
-        $allowedMimeTypes = $this->lookupMimeTypes($fileExtension, $file);
-        
-        if (!in_array($fileMimeType, $allowedMimeTypes)) {
+    }
+    
+    /**
+     * Validates that the detected mime type matches the allowed mime types.
+     *
+     * @param UploadedFileInterface $file
+     * @param string $detectedMimeType
+     * @param array<array-key, string> $allowedMimeTypes
+     * @return void
+     * @throws UploadedFileException
+     */
+    protected function validateMimeTypeConsistency(
+        UploadedFileInterface $file,
+        string $detectedMimeType,
+        array $allowedMimeTypes
+    ): void {
+        if (!in_array($detectedMimeType, $allowedMimeTypes, true)) {
             throw new UploadedFileException(
                 uploadedFile: $file,
                 message: 'The mime type :type of the file :name is invalid. Allowed mime types are :types.',
                 parameters: [
-                    ':type' => $fileMimeType,
+                    ':type' => $detectedMimeType,
                     ':name' => (string)$file->getClientFilename(),
                     ':types' => implode(',', $allowedMimeTypes),
                 ],
             );
         }
-        
-        // Check that the client media type is consistent with its content:
-        if (is_string($file->getClientMediaType())) {
-            if ($fileMimeType !== $file->getClientMediaType()) {
-                throw new UploadedFileException(
-                    uploadedFile: $file,
-                    message: 'The mime type :type of the file :name is invalid. Allowed mime types are :types.',
-                    parameters: [
-                        ':type' => $file->getClientMediaType(),
-                        ':name' => (string)$file->getClientFilename(),
-                        ':types' => implode(',', $allowedMimeTypes),
-                    ],
-                );
-            }
+    }
+    
+    /**
+     * Validates that the client media type is consistent with the detected mime type.
+     *
+     * @param UploadedFileInterface $file
+     * @param string $detectedMimeType
+     * @param array<array-key, string> $allowedMimeTypes
+     * @return void
+     * @throws UploadedFileException
+     */
+    protected function validateClientMediaTypeConsistency(
+        UploadedFileInterface $file,
+        string $detectedMimeType,
+        array $allowedMimeTypes
+    ): void {
+        $clientMediaType = $file->getClientMediaType();
+
+        if (!is_string($clientMediaType)) {
+            return;
+        }
+
+        if ($detectedMimeType !== $clientMediaType) {
+            throw new UploadedFileException(
+                uploadedFile: $file,
+                message: 'The mime type :type of the file :name is invalid. Allowed mime types are :types.',
+                parameters: [
+                    ':type' => $clientMediaType,
+                    ':name' => (string)$file->getClientFilename(),
+                    ':types' => implode(',', $allowedMimeTypes),
+                ],
+            );
         }
     }
     
@@ -194,9 +247,9 @@ class Validator implements ValidatorInterface
             return;
         }
         
-        $fileSizeInKb = $file->getSize() * 1024;
+        $fileSizeInKb = $file->getSize() / 1024;
         
-        if ($fileSizeInKb > $this->maxFileSizeInKb) {
+        if ($fileSizeInKb > $maxFileSizeInKb) {
             throw new UploadedFileException(
                 uploadedFile: $file,
                 message: 'The file :name exceeded the max upload size of :num KB.',
@@ -240,7 +293,7 @@ class Validator implements ValidatorInterface
     {
         $map = new GeneratedExtensionToMimeTypeMap();
         $mimeType = $map->lookupMimeType($extension);
-        
+
         if (is_null($mimeType)) {
             throw new UploadedFileException(
                 uploadedFile: $file,
@@ -250,5 +303,19 @@ class Validator implements ValidatorInterface
         }
         
         return [$mimeType];
+    }
+    
+    /**
+     * Extracts the filename and extension from the uploaded file.
+     *
+     * @param UploadedFileInterface $file
+     * @return array{string, string} [filename, extension]
+     */
+    protected function extractFilenameAndExtension(UploadedFileInterface $file): array
+    {
+        $filename = (string)$file->getClientFilename();
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        return [$filename, $extension];
     }
 }
