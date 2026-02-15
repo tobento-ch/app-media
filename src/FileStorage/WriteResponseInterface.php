@@ -13,6 +13,7 @@ declare(strict_types=1);
  
 namespace Tobento\App\Media\FileStorage;
 
+use Psr\Http\Message\StreamInterface;
 use Stringable;
 use Tobento\Service\Message\MessagesInterface;
 
@@ -31,9 +32,9 @@ interface WriteResponseInterface
     /**
      * Returns the content.
      *
-     * @return string|Stringable
+     * @return string|Stringable|StreamInterface
      */
-    public function content(): string|Stringable;
+    public function content(): string|Stringable|StreamInterface;
     
     /**
      * Returns the original filename (unmodified). Might come from client.

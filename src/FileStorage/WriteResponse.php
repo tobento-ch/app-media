@@ -13,6 +13,7 @@ declare(strict_types=1);
  
 namespace Tobento\App\Media\FileStorage;
 
+use Psr\Http\Message\StreamInterface;
 use Stringable;
 use Tobento\Service\Message\HasMessages;
 use Tobento\Service\Message\MessagesInterface;
@@ -28,13 +29,13 @@ class WriteResponse implements WriteResponseInterface
      * Create a new WriteResponse.
      *
      * @param string $path
-     * @param string|Stringable $content
+     * @param string|Stringable|StreamInterface $content
      * @param string $originalFilename The original filename (unmodified). Might come from client.
      * @param null|MessagesInterface $messages
      */
     public function __construct(
         protected string $path,
-        protected string|Stringable $content,
+        protected string|Stringable|StreamInterface $content,
         protected string $originalFilename,
         null|MessagesInterface $messages = null,
     ) {
@@ -54,9 +55,9 @@ class WriteResponse implements WriteResponseInterface
     /**
      * Returns the content.
      *
-     * @return string|Stringable
+     * @return string|Stringable|StreamInterface
      */
-    public function content(): string|Stringable
+    public function content(): string|Stringable|StreamInterface
     {
         return $this->content;
     }
