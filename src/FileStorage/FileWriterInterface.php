@@ -42,4 +42,14 @@ interface FileWriterInterface
      * @throws WriteException
      */
     public function writeUploadedFile(UploadedFileInterface $file, string $folderPath): WriteResponseInterface;
+    
+    /**
+     * Copy an existing file inside the storage into the given folder.
+     *
+     * @param string $path The existing file path inside the same storage.
+     * @param string $folderPath The folder where the file should be copied to.
+     * @return WriteResponseInterface
+     * @throws WriteException
+     */
+    public function copyFile(string $path, string $folderPath): WriteResponseInterface;
 }

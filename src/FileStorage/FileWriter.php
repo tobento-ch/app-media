@@ -117,6 +117,65 @@ class FileWriter implements FileWriterInterface
     }
     
     /**
+     * Copy an existing file inside the storage into the given folder.
+     *
+     * @param string $path The existing file path inside the same storage.
+     * @param string $folderPath The folder where the file should be copied to.
+     * @return WriteResponseInterface
+     * @throws WriteException
+     */
+    public function copyFile(string $path, string $folderPath): WriteResponseInterface
+    {
+        // verify folder:
+        $folderPath = $this->verifyFolderPath($folderPath);
+
+        // ensure source exists:
+        if (! $this->storage->exists($path)) {
+            throw new WriteException(
+                message: 'The source file :path does not exist in storage :storage.',
+                parameters: [':path' => $path, ':storage' => $this->storage->name()],
+            );
+        }
+
+        // extract filename + extension:
+        $basename = basename($path);
+        $extension = pathinfo($basename, PATHINFO_EXTENSION);
+        $filename = pathinfo($basename, PATHINFO_FILENAME);
+
+        // apply filename rules:
+        $verifiedFilename = $this->verifyFilename($filename);
+
+        // build target path:
+        $targetPath = $this->buildPath($folderPath, $verifiedFilename, $extension);
+
+        // apply duplicate rules:
+        $targetPath = $this->verifyFileDuplicate($targetPath);
+
+        try {
+            // perform storage-level copy:
+            $this->storage->copy(from: $path, to: $targetPath);
+        } catch (FileWriteException $e) {
+            throw new WriteException(
+                message: 'Failed to copy the file :source to :target in storage :storage.',
+                parameters: [
+                    ':source' => $path,
+                    ':target' => $targetPath,
+                    ':storage' => $this->storage->name(),
+                ],
+                code: $e->getCode(),
+                previous: $e,
+            );
+        }
+
+        // return WriteResponse consistent with writeUploadedFile():
+        return new WriteResponse(
+            path: $targetPath,
+            content: '', // no stream needed for copy
+            originalFilename: $basename,
+        );
+    }
+    
+    /**
      * Verify the folder path.
      *
      * @param string $path
@@ -196,15 +255,22 @@ class FileWriter implements FileWriterInterface
                 $dirname = '';
             }
             
-            $originalFilename = $filename;
-            $i = 1;
-
-            while ($this->storage->exists($path)) {
-                $filename = $originalFilename.'-'.$i++;
-                $path = $this->buildPath($dirname, $filename, $extension);
+            // Detect existing numeric suffix: file-2, file-10, etc.
+            if (preg_match('/^(.*)-(\d+)$/', $filename, $matches)) {
+                $base = $matches[1];
+                $i = (int)$matches[2];
+            } else {
+                $base = $filename;
+                $i = 1;
             }
 
-            return $path;
+            // Try incrementing suffix
+            do {
+                $newFilename = $base . '-' . $i++;
+                $newPath = $this->buildPath($dirname, $newFilename, $extension);
+            } while ($this->storage->exists($newPath));
+
+            return $newPath;
         }
         
         throw new WriteException(
@@ -229,7 +295,7 @@ class FileWriter implements FileWriterInterface
         try {
             $this->storage->write(
                 path: $path,
-                content: (string)$writeResponse->content()
+                content: $writeResponse->content()
             );
         } catch (FileWriteException $e) {
             throw new WriteException(
