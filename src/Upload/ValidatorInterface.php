@@ -22,6 +22,13 @@ use Tobento\App\Media\Exception\UploadedFileException;
 interface ValidatorInterface
 {
     /**
+     * Returns the file extensions handled by the specialized validator (lowercase, without dot).
+     *
+     * @return array<int, string>
+     */
+    public function supportsExtensions(): array;
+    
+    /**
      * Validates the uploaded file.
      *
      * @param UploadedFileInterface $file
