@@ -26,6 +26,11 @@ class ValidatorTest extends TestCase
         $this->assertInstanceof(ValidatorInterface::class, new Validator());
     }
 
+    public function testSupportsExtensionsMethod()
+    {
+        $this->assertSame([], new Validator()->supportsExtensions());
+    }
+    
     public function testFailsIfUploadErr()
     {
         $this->expectException(UploadedFileException::class);
@@ -82,7 +87,8 @@ class ValidatorTest extends TestCase
         $this->expectExceptionMessage('The mime type :type of the file :name is invalid. Allowed mime types are :types.');
         
         (new Validator(
-            allowedExtensions: ['txt']
+            allowedExtensions: ['txt'],
+            validateClientMediaType: true,
         ))->validateUploadedFile(
             file: (new FileFactory())->createFileWithContent(
                 filename: 'file.txt',
@@ -199,6 +205,21 @@ class ValidatorTest extends TestCase
         );
     }
     
+    public function testDoesNotFailIfFileSizeIsWithinLimit()
+    {
+        (new Validator(
+            allowedExtensions: ['txt'],
+            maxFileSizeInKb: 6,
+        ))->validateUploadedFile(
+            file: (new FileFactory())->createFileWithContent(
+                filename: 'file.txt',
+                content: 'Lorem',
+            )->setSize(5)
+        );
+
+        $this->assertTrue(true);
+    }
+    
     public function testFailsIfMaxFileSizeExceeded()
     {
         $this->expectException(UploadedFileException::class);
@@ -211,7 +232,7 @@ class ValidatorTest extends TestCase
             file: (new FileFactory())->createFileWithContent(
                 filename: 'file.txt',
                 content: 'Lorem',
-            )->setSize(5)
+            )->setSize(7)
         );
     }
 }

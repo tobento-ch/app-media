@@ -16,6 +16,7 @@ namespace Tobento\App\Media\Test\FileStorage;
 use PHPUnit\Framework\TestCase;
 use Tobento\App\Media\FileStorage\WriteResponse;
 use Tobento\App\Media\FileStorage\WriteResponseInterface;
+use Tobento\App\Media\Test\Factory;
 use Tobento\Service\Message\MessagesInterface;
 use Tobento\Service\Message\Messages;
 
@@ -48,5 +49,20 @@ class WriteResponseTest extends TestCase
         );
         
         $this->assertSame($messages, $response->messages());
+    }
+    
+    public function testWithStreamContent()
+    {
+        $stream = Factory::createStreamFactory()->createStream('content');
+
+        $response = new WriteResponse(
+            path: 'path/file.txt',
+            content: $stream,
+            originalFilename: 'filename.txt'
+        );
+
+        $this->assertSame($stream, $response->content());
+        $this->assertSame('path/file.txt', $response->path());
+        $this->assertSame('filename.txt', $response->originalFilename());
     }
 }

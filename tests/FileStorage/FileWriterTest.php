@@ -95,6 +95,73 @@ class FileWriterTest extends TestCase
         $this->assertSame('file.txt', $writeResponse->originalFilename());
         $this->assertInstanceof(MessagesInterface::class, $writeResponse->messages());
     }
+    
+    public function testCopyFileMethodCopiesFileWithinStorage()
+    {
+        $storage = Factory::createFileStorage(name: 'uploads-private');
+
+        // Prepare a file to copy:
+        $storage->write(
+            path: 'foo/image.jpg',
+            content: 'original-content'
+        );
+
+        $fileWriter = new FileWriter(
+            storage: $storage,
+            duplicates: FileWriter::RENAME,
+        );
+
+        // Ensure initial state:
+        $this->assertTrue($storage->exists('foo/image.jpg'));
+        $this->assertFalse($storage->exists('bar/image.jpg'));
+
+        // Copy the file:
+        $writeResponse = $fileWriter->copyFile(
+            path: 'foo/image.jpg',
+            folderPath: 'bar'
+        );
+
+        // Assertions:
+        $this->assertInstanceOf(WriteResponseInterface::class, $writeResponse);
+        $this->assertSame('bar/image.jpg', $writeResponse->path());
+        $this->assertSame('image.jpg', $writeResponse->originalFilename());
+        $this->assertSame('', $writeResponse->content()); // copy has no stream
+        $this->assertInstanceOf(MessagesInterface::class, $writeResponse->messages());
+
+        // Ensure file exists at new location:
+        $this->assertTrue($storage->exists('bar/image.jpg'));
+
+        // Ensure content is identical (no processing):
+        $this->assertSame(
+            'original-content',
+            (string)$storage->with('stream')->file('bar/image.jpg')->stream()
+        );
+    }
+
+    public function testCopyFileMethodHandlesDuplicates()
+    {
+        $storage = Factory::createFileStorage(name: 'uploads-private');
+
+        // Prepare two files:
+        $storage->write('foo/image.jpg', 'content-1');
+        $storage->write('bar/image.jpg', 'content-2');
+
+        $fileWriter = new FileWriter(
+            storage: $storage,
+            duplicates: FileWriter::RENAME,
+        );
+
+        // Copy foo/image.jpg into bar/ where image.jpg already exists:
+        $writeResponse = $fileWriter->copyFile(
+            path: 'foo/image.jpg',
+            folderPath: 'bar'
+        );
+
+        // Should rename to image-1.jpg:
+        $this->assertSame('bar/image-1.jpg', $writeResponse->path());
+        $this->assertTrue($storage->exists('bar/image-1.jpg'));
+        $this->assertSame('image.jpg', $writeResponse->originalFilename());
+    }
 
     public function testFilenamesUsingAlnum()
     {
@@ -166,26 +233,55 @@ class FileWriterTest extends TestCase
         $this->assertSame('foo.txt', $writeResponse->originalFilename());
     }
     
-    public function testDublicatesRename()
+    public function testDuplicatesRename()
     {
+        $storage = Factory::createFileStorage(name: 'uploads-private');
+
         $fileWriter = new FileWriter(
-            storage: Factory::createFileStorage(name: 'uploads-private'),
+            storage: $storage,
             duplicates: FileWriter::RENAME,
         );
-        
+
         $stream = Factory::createStreamFactory()->createStream('content');
-        
-        $writeResponse = $fileWriter->writeFromStream(stream: $stream, filename: 'foo.txt', folderPath: '');
+
+        // 1. First write: foo.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo.txt', '');
         $this->assertSame('foo.txt', $writeResponse->path());
         $this->assertSame('foo.txt', $writeResponse->originalFilename());
-        
-        $writeResponse = $fileWriter->writeFromStream(stream: $stream, filename: 'foo.txt', folderPath: '');
+
+        // 2. Second write: foo-1.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo.txt', '');
         $this->assertSame('foo-1.txt', $writeResponse->path());
         $this->assertSame('foo.txt', $writeResponse->originalFilename());
-        
-        $writeResponse = $fileWriter->writeFromStream(stream: $stream, filename: 'foo.txt', folderPath: '');
+
+        // 3. Third write: foo-2.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo.txt', '');
         $this->assertSame('foo-2.txt', $writeResponse->path());
         $this->assertSame('foo.txt', $writeResponse->originalFilename());
+
+        // 4. Write a file that already has a suffix: foo-3.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo-3.txt', '');
+        $this->assertSame('foo-3.txt', $writeResponse->path());
+        $this->assertSame('foo-3.txt', $writeResponse->originalFilename());
+
+        // 5. Now writing foo-3.txt again should produce foo-4.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo-3.txt', '');
+        $this->assertSame('foo-4.txt', $writeResponse->path());
+        $this->assertSame('foo-3.txt', $writeResponse->originalFilename());
+
+        // 6. Non-numeric suffix should not break: foo-bar.txt → foo-bar-1.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo-bar.txt', '');
+        $this->assertSame('foo-bar.txt', $writeResponse->path());
+
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo-bar.txt', '');
+        $this->assertSame('foo-bar-1.txt', $writeResponse->path());
+
+        // 7. Deep numeric suffix: foo-10.txt → foo-11.txt
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo-10.txt', '');
+        $this->assertSame('foo-10.txt', $writeResponse->path());
+
+        $writeResponse = $fileWriter->writeFromStream($stream, 'foo-10.txt', '');
+        $this->assertSame('foo-11.txt', $writeResponse->path());
     }
     
     public function testDublicatesOverwrite()
