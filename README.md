@@ -5,7 +5,7 @@ The App Media package provides a set of features and services for working with m
 * [responsive images](#picture-feature) using the HTML `<picture>` element
 * [file display](#file-display-feature) and [file download](#file-download-feature)
 * [image editing](#image-editor-feature) for cropping, resizing, and transforming images
-* [upload validation](#upload-validator) for validating uploaded files
+* [upload validation](#upload-validators) for validating uploaded files
 
 and more ...
 
@@ -33,17 +33,12 @@ and more ...
         - [Picture Editor Feature](#picture-editor-feature)
             - [Edit Picture](#edit-picture)
     - [Services](#services)
-        - [File Writer](#file-writer)
+        - [File Storage Writer](#file-storage-writer)
         - [Copy Mode (CopyFileWrapper)](#copy-mode-copyfilewrapper)
         - [Upload Validators](#upload-validators)
-            - [Upload Validator](#upload-validator)
-            - [Upload CSV Validator](#upload-csv-validator)
-            - [Upload NDJSON Validator](#upload-ndjson-validator)
-            - [Upload PDF Validator](#upload-pdf-validator)
-            - [Upload ZIP Validator](#upload-zip-validator)
-            - [Upload Combine Validator](#upload-combine-validator)
         - [Uploaded File Factory](#uploaded-file-factory)
         - [Image Processor](#image-processor)
+        - [Picture Generator](#picture-generator)
     - [Learn More](#learn-more)
         - [Display And Download Files Using Apps](#display-and-download-files-using-apps)
 - [Credits](#credits)
@@ -536,6 +531,14 @@ In the ```app/config/logging.php``` file you may define the logger to be used, o
 
 This feature offers a full image-editing interface, making it possible to crop, resize, transform, and adjust images within your application.
 
+> **Technical Note**  
+> The Image Editor uses the `ImageProcessor` from  
+> https://github.com/tobento-ch/service-upload/#image-processor  
+>
+> app-media wraps this processor in  
+> `Tobento\App\Media\Upload\ImageProcessor`  
+> to integrate logging and application-level configuration.
+
 > **Important**
 >
 > The Image Editor loads images in the browser and writes changes back to storage.  
@@ -577,7 +580,7 @@ In the [media config file](#media-config) you can configure this feature:
         supportedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
         
         // you may define a custom image actions class:
-        imageActions: \Tobento\App\Media\Image\ImageActions::class, // default
+        imageActions: \Tobento\App\Media\Imager\ImageActions::class, // default
         
         // define the user permission or null if no permission is needed (not recommended):
         userPermission: 'media.image.editor', // default
@@ -585,6 +588,32 @@ In the [media config file](#media-config) you can configure this feature:
         // you may localize routes:
         localizeRoute: true, // false (default)
     ),
+],
+```
+
+See the vendor documentation for available actions:  
+[Image Actions - tobento/service-imager](https://github.com/tobento-ch/service-imager#image-actions)
+
+The class used here (`Tobento\App\Media\Imager\ImageActions`) extends the vendor
+`ImageActions` and adds optional logging support via `LoggerTrait`.
+
+**Logging**
+
+Ensure the [App Logging Boot](https://github.com/tobento-ch/app-logging#logging-boot) is enabled.
+
+In the ```app/config/logging.php``` file you may define the logger to be used, otherwise the default logger will be used:
+
+```php
+'aliases' => [
+    // Logs if image processing fails:
+    \Tobento\App\Media\Upload\ImageProcessor::class => 'daily',
+    // or do not log at all:
+    \Tobento\App\Media\Upload\ImageProcessor::class => 'null',
+    
+    // Logs if image action fails:
+    \Tobento\App\Media\Imager\ImageActions::class => 'daily',
+    // or do not log at all:
+    \Tobento\App\Media\Imager\ImageActions::class => 'null',
 ],
 ```
 
@@ -602,19 +631,23 @@ The ```Tobento\App\Media\Event\ImageEdited``` will dispatch **after** the image 
 
 ### Picture Feature
 
-This feature may be used to generate HTML markup for responsive images using the HTML picture element.
+This feature integrates the [tobento/service-picture-generator](https://github.com/tobento-ch/service-picture-generator) package into your application and provides a convenient way to generate responsive `<picture>` markup.
 
-**Workflow**
+Images are generated in the background (via queue) when they are first requested.  
+Until the generated variants exist, a fallback image is returned.  
+Once generated, the responsive picture markup is served automatically.
 
-If images are not created yet when you [display a picture](#creating-picture), a picture job will be sent to the defined queue, generating the images in the background and returning a "fallback" picture from the defined resource. Once, the images are generated, the picture will be displayed with the images generated.
+For a detailed explanation of how picture generation works internally, see the  
+[Workflow section of service-picture-generator](https://github.com/tobento-ch/service-picture-generator#workflow).
+
 
 **Requirements**
 
-This feature does not have any requirements.
+This feature has no additional package requirements.
 
 **Install**
 
-In the [media config file](#media-config) you can configure this feature:
+Configure the feature in your [media config file](#media-config):
 
 ```php
 'features' => [
@@ -633,13 +666,15 @@ In the [media config file](#media-config) you can configure this feature:
 ],
 ```
 
-Make sure you have configured the defined storages in the [App File Storage Config](https://github.com/tobento-ch/app-file-storage#file-storage-config).
+Make sure the storages exist in your  
+[App File Storage Config](https://github.com/tobento-ch/app-file-storage#file-storage-config).
 
-Make sure you have configured the defined queue in the [App Queue Config](https://github.com/tobento-ch/app-queue#queue-config).
+Make sure the queue exists in your  
+[App Queue Config](https://github.com/tobento-ch/app-queue#queue-config).
 
 **Logging**
 
-Make sure you have booted the [App Logging Boot](https://github.com/tobento-ch/app-logging#logging-boot).
+Ensure the [App Logging Boot](https://github.com/tobento-ch/app-logging#logging-boot) is enabled.
 
 In the ```app/config/logging.php``` file you may define the logger to be used, otherwise the default logger will be used:
 
@@ -649,108 +684,37 @@ In the ```app/config/logging.php``` file you may define the logger to be used, o
     \Tobento\App\Media\Picture\PictureGenerator::class => 'daily',
     // or do not log at all:
     \Tobento\App\Media\Picture\PictureGenerator::class => 'null',
-    
-    // Logs if image action fails:
-    \Tobento\App\Media\Image\ImageActions::class => 'daily',
-    // or do not log at all:
-    \Tobento\App\Media\Image\ImageActions::class => 'null',
 ],
 ```
 
-#### Display Picture
+#### Displaying Pictures
 
-Within your view file, use the ```picture``` method to display a picture based on the given ```path```, ```resource``` and ```definition``` parameter:
-
-**Example Using A Named Definition**
-
-You may use named definitions to generate images from. Check out the [Picture Definitions](#picture-definitions) section to learn how to add named definitions.
+Use the `picture()` helper in your views:
 
 ```php
 <?= $view->picture(
+    // The path to the original image within the storage:
     path: 'path/to/image.jpg',
+
+    // The storage name where the image is located:
     resource: 'storage-name',
+
+    // The named picture definition to use:
     definition: 'name',
+
+    // Whether to queue image generation (recommended):
+    queue: true, // default
+
+    // Whether private storages may be read:
     allowPrivateStorage: false, // default
 )->imgAttr('alt', 'Alt Text') ?>
 ```
 
-About `allowPrivateStorage`
-
-Use this when the image source is a *private* storage.  
-(For most cases, using a public storage as the image source is recommended.)
-
-- `false` (default): private storages are not read and a `NullPictureTag` is returned.
-- `true`: allow reading from private storage (useful for backend-only sources such as uploads or protected files).
-
-Depending on your definition this will output:
-
-```html
-<picture>
-  <source srcset="https://example.com/path/to/image.webp" type="image/webp">
-  <source srcset="https://example.com/path/to/image.jpg" type="image/jpeg">
-  <img src="https://example.com/path/to/image.jpg" alt="Alt Text">
-</picture>
-```
-
-Using named definitions have the following advantages:
-
-* you can crop images based on the named definition
-* you can have different definitions per view theme
-
-**Example Using A Definition**
-
-```php
-use Tobento\Service\Picture\Definition\ArrayDefinition;
-
-<?= $view->picture(
-    path: 'path/to/image.jpg',
-    resource: 'storage-name',
-    definition: new ArrayDefinition('product-main', [
-        'img' => [
-            'src' => [600],
-            'alt' => 'Alternative Text',
-            'loading' => 'lazy',
-        ],
-        // You may define any sources:
-        'sources' => [
-            [
-                'media' => '(min-width: 800px)',
-                'srcset' => [
-                    '' => [1200, 500],
-                ],
-                'type' => 'image/webp',
-            ],
-            [
-                'media' => '(max-width: 600px)',
-                'srcset' => [
-                    '' => [600, 400],
-                ],
-                'type' => 'image/webp',
-            ],
-        ],
-    ]),
-) ?>
-```
-
-Check out the [Picture Definition](https://github.com/tobento-ch/service-picture#definition) section to learn more about definitions in general.
-
-**Example Using An Imager Resource**
-
-```php
-use Tobento\Service\Imager\ResourceInterface;
-
-<?= $view->picture(
-    path: 'path/to/image.jpg',
-    resource: $resource, // ResourceInterface
-    definition: 'name',
-)->imgAttr('alt', 'Alt Text') ?>
-```
-
-Check out the [Picture Creating - Create Picture From Resource](https://github.com/tobento-ch/service-picture#picture-creating) section to learn more about.
+See [Basic Usage - Picture Generator](https://github.com/tobento-ch/service-picture-generator#basic-usage) section for more information.
 
 #### Picture Definitions
 
-Store your picture definition JSON files in the ```app/views/picture-definitions/``` directory:
+Store JSON definitions in:
 
 ```
 app/
@@ -760,64 +724,32 @@ app/
             ...
 ```
 
-You may check out the [Json Files Definitions](https://github.com/tobento-ch/service-picture#json-files-definitions) for more information.
+See [Json Files Definitions](https://github.com/tobento-ch/service-picture#json-files-definitions) for more information.
 
 #### Clearing Generated Picture
 
-**Using Console Command**
-
-To clear all generated pictures run the following command:
-
-```
-php ap picture:clear
-```
-
-Or clear generated pictures of specific definitions only:
-
-```
-php ap picture:clear --def=product-main --def=post
-```
-
-**Using Picture Generator**
-
-```php
-use Tobento\App\Media\Picture\PictureGeneratorInterface;
-
-class SomeService
-{
-    public function __construct(
-        protected PictureGeneratorInterface $pictureGenerator,
-    ) {}
-    
-    private function deleteGeneratedPictures()
-    {
-        // First, get the picture repository from the generator:
-        $pictureRepository = $this->pictureGenerator->pictureRepository();
-        
-        // Deletes the created picture with all its created images for the specified path and definition:
-        $pictureRepository->delete(
-            path: 'foo/image.jpg',
-            definition: 'product-main',
-        );
-        
-        // Deletes all created pictures with all its created images for the specified definition:
-        $pictureRepository->deleteAll(
-            definition: 'product-main',
-        );
-        
-        // Deletes all created pictures with all its created images for the specified path:
-        $pictureRepository->deleteAllByPath(
-            path: 'foo/image.jpg',
-        );
-    }
-}
-```
+To clear generated pictures see [Clearing Generated Pictures - Picture Generator](https://github.com/tobento-ch/service-picture-generator#clearing-generated-pictures) section.
 
 ### Picture Editor Feature
 
 This feature provides an interface for editing pictures and their defined variants.  
 It displays all picture definitions along with their preview images, allowing you to crop, resize, transform, and adjust each variant before regenerating them.  
 It requires the [Picture Feature](#picture-feature) to be installed.
+
+**Technical Note**  
+The Picture Editor relies on two underlying components:
+
+* Image processing is performed by the `ImageProcessor` from  
+  https://github.com/tobento-ch/service-upload/#image-processor  
+  app-media extends this processor through  
+  `Tobento\App\Media\Upload\ImageProcessor`  
+  to add logging and application-level integration.
+
+* Picture generation is handled by the `PictureGenerator` from  
+  https://github.com/tobento-ch/service-picture-generator  
+  app-media wraps this generator in  
+  `Tobento\App\Media\Picture\PictureGenerator`  
+  to provide logging support and seamless framework integration.
 
 > **Important**
 >
@@ -874,6 +806,37 @@ In the [media config file](#media-config) you can configure this feature:
 ],
 ```
 
+See the vendor documentation for available actions:  
+[Image Actions - tobento/service-imager](https://github.com/tobento-ch/service-imager#image-actions)
+
+The class used here (`Tobento\App\Media\Imager\ImageActions`) extends the vendor
+`ImageActions` and adds optional logging support via `LoggerTrait`.
+
+**Logging**
+
+Ensure the [App Logging Boot](https://github.com/tobento-ch/app-logging#logging-boot) is enabled.
+
+In the ```app/config/logging.php``` file you may define the logger to be used, otherwise the default logger will be used:
+
+```php
+'aliases' => [
+    // Logs if picture generation fails:
+    \Tobento\App\Media\Picture\PictureGenerator::class => 'daily',
+    // or do not log at all:
+    \Tobento\App\Media\Picture\PictureGenerator::class => 'null',
+    
+    // Logs if image processing fails:
+    \Tobento\App\Media\Upload\ImageProcessor::class => 'daily',
+    // or do not log at all:
+    \Tobento\App\Media\Upload\ImageProcessor::class => 'null',
+    
+    // Logs if image action fails:
+    \Tobento\App\Media\Imager\ImageActions::class => 'daily',
+    // or do not log at all:
+    \Tobento\App\Media\Imager\ImageActions::class => 'null',
+],
+```
+
 #### Edit Picture
 
 Use the ```media.picture.editor``` route name to generate the url where you can edit the specified picture.
@@ -893,631 +856,57 @@ The ```Tobento\App\Media\Event\PictureEdited``` will be dispatched **after** the
 
 ## Services
 
-### File Writer
+`app-media` exposes several upload-related services from the
+`tobento/service-upload` package.
 
-The file writer class writes the given file to the defined [File Storage](https://github.com/tobento-ch/service-file-storage).
+For full documentation of upload workflows, validators, file writing,
+and processing, see:
+https://github.com/tobento-ch/service-upload
 
-```php
-use Tobento\App\Media\FileStorage\FileWriter;
-use Tobento\App\Media\FileStorage\FileWriterInterface;
-use Tobento\App\Media\FileStorage\Writer;
-use Tobento\App\Media\Image\ImageProcessor;
-use Tobento\Service\FileStorage\StorageInterface;
+### File Storage Writer
 
-$fileWriter = new FileWriter(
-    // Define the file storage where to write the files to:
-    storage: $storage, // StorageInterface
-    
-    // Define how filenames should be handled:
-    filenames: FileWriter::ALNUM, // RENAME, ALNUM, KEEP
-    
-    // Or using a closure for customized filenames:
-    filenames: function (string $filename): string {
-        // customize
-        return $filename;
-    },
-    
-    // Define how dublicates should be handled:
-    duplicates: FileWriter::RENAME, // RENAME, OVERWRITE, DENY
-    
-    // Define how folders should be handled:
-    folders: FileWriter::ALNUM, // or KEEP
-    
-    // Or using a closure for customized folders:
-    folders: function (string $path): string {
-        // customize
-        return $path;
-    },
-    
-    // Define the max folder depth limit:
-    folderDepthLimit: 5,
+Writes uploaded files to a configured storage location (e.g., local disk, cloud storage).
+This service comes directly from `tobento/service-upload`
 
-    // You may add writers handling specific files:
-    writers: [
-        new Writer\ImageWriter(
-            imageProcessor: new ImageProcessor(
-                actions: [
-                    'orientate' => [],
-                    'resize' => ['width' => 2000],
-                ],
-            ),
-        ),
-        new Writer\SvgSanitizerWriter(),
-    ],
-);
-```
-
-You may check out the [Image Processor](#image-processor) section to learn more about it.
-
-**writeFromStream**
-
-Use the ```writeFromStream``` method to write the given stream to the file storage:
-
-```php
-use Psr\Http\Message\StreamInterface;
-use Tobento\App\Media\Exception\WriteException;
-use Tobento\App\Media\FileStorage\WriteResponseInterface;
-
-$writeResponse = $fileWriter->writeFromStream(
-    stream: $stream, // StreamInterface
-    filename: 'file.txt',
-    folderPath: 'path/to', // or an empty string if no path at all
-);
-
-var_dump($writeResponse instanceof WriteResponseInterface);
-// bool(true)
-
-// throws WriteException if writing failed!
-```
-
-**writeUploadedFile**
-
-Use the ```writeUploadedFile``` method to write the given uploaded file to the file storage:
-
-```php
-use Psr\Http\Message\UploadedFileInterface;
-use Tobento\App\Media\Exception\WriteException;
-use Tobento\App\Media\FileStorage\WriteResponseInterface;
-
-$writeResponse = $fileWriter->writeUploadedFile(
-    file: $uploadedFile, // UploadedFileInterface
-    folderPath: 'path/to', // or an empty string if no path at all
-);
-
-var_dump($writeResponse instanceof WriteResponseInterface);
-// bool(true)
-
-// throws WriteException if writing failed!
-```
-
-It is highly recommended to use the [Upload Validator](#upload-validator) before writing the uploaded file to the file storage.
-
-**copyFile**
-
-Use the `copyFile` method to copy an existing file inside the same file storage to a new folder.
-This is useful when selecting files from a file manager or when you want to duplicate files without re-uploading or re-processing them.
-
-```php
-use Tobento\App\Media\Exception\WriteException;
-use Tobento\App\Media\FileStorage\WriteResponseInterface;
-
-use Tobento\App\Media\Exception\WriteException;
-use Tobento\App\Media\FileStorage\WriteResponseInterface;
-
-$writeResponse = $fileWriter->copyFile(
-    path: 'foo/image.jpg', // existing file path inside the storage
-    folderPath: 'path/to', // target folder, or an empty string for root
-);
-
-// Result: 'path/to/image.jpg'
-// Note: copyFile() does NOT preserve the source folder structure.
-
-var_dump($writeResponse instanceof WriteResponseInterface);
-// bool(true)
-
-// throws WriteException if copying failed!
-```
-
-This method performs a storage-level copy (e.g. local to local, S3 to S3) without reading streams or applying any image processing.
-It is ideal for file-manager selections or fast, lossless duplication.
-
-**writeResponse**
-
-```php
-use Psr\Http\Message\UploadedFileInterface;
-use Tobento\App\Media\FileStorage\WriteResponseInterface;
-use Tobento\Service\Message\MessagesInterface;
-
-$writeResponse = $fileWriter->writeUploadedFile(file: $uploadedFile, folderPath: '');
-
-var_dump($writeResponse instanceof WriteResponseInterface);
-// bool(true)
-
-// Get the path (string) e.g. path/to/file.txt
-$path = $writeResponse->path();
-
-// Get the content (string|\Stringable):
-$content = $writeResponse->content();
-
-// Get the original filename (unmodified). Might come from client.
-$originalFilename = $writeResponse->originalFilename();
-
-// Get the messages:
-$messages = $writeResponse->messages();
-// MessagesInterface
-```
+Documentation:
+https://github.com/tobento-ch/service-upload#file-storage-writer
 
 ### Copy Mode (CopyFileWrapper)
 
-Copy mode can be used when you want to copy an existing file inside the same [file storage](https://github.com/tobento-ch/app-file-storage) instead of uploading a new one.  
-A `CopyFileWrapper` contains:
-
-- the original `UploadedFileInterface` (metadata only)
-- the storage name where the file currently exists
-- the path of the file inside that storage
-    
-```php
-use Tobento\App\Media\Upload\CopyFileWrapper;
-
-if ($inputFile instanceof CopyFileWrapper) {
-    $writeResponse = $writer->copyFile(
-        sourcePath: $inputFile->path(),
-        folderPath: $folderPath,
-    );
-} else {
-    $writeResponse = $writer->writeUploadedFile($inputFile, $folderPath);
-}
-```
+Provides copy behavior for uploaded files.
+https://github.com/tobento-ch/service-upload#copy-mode-copyfilewrapper
 
 ### Upload Validators
 
-#### Upload Validator
-
-The upload validator validates a given uploaded file against a set of configurable security and consistency rules.
-
-```php
-use Tobento\App\Media\Upload\Validator;
-use Tobento\App\Media\Upload\ValidatorInterface;
-
-$validator = new Validator(
-    // Allowed file extensions:
-    allowedExtensions: ['jpg', 'png', 'gif', 'webp'],
-    
-    // Whether to restrict filenames to alphanumeric characters,
-    // hyphens, underscores, spaces, and periods:
-    strictFilenameCharacters: true, // default
-    
-    // Maximum allowed filename length:
-    maxFilenameLength: 255, // default
-    
-    // Maximum file size in kilobytes (null = unlimited):
-    maxFileSizeInKb: 2000,
-    
-    // Whether to validate the client-provided media type
-    // against the detected mime type (disabled by default):
-    validateClientMediaType: true,
-);
-
-var_dump($validator instanceof ValidatorInterface);
-// bool(true)
-```
-
-**validateUploadedFile**
-
-Use the ```validateUploadedFile``` method to validate the given uploaded file:
-
-```php
-use Psr\Http\Message\UploadedFileInterface;
-use Tobento\App\Media\Exception\UploadedFileException;
-
-try {
-    $validator->validateUploadedFile(
-        file: $uploadedFile, // UploadedFileInterface
-    );
-} catch (UploadedFileException $e) {
-    // validation failed.
-}
-```
-
-#### Security
-
-The validator ensures that:
-
-- the file extension is allowed
-- the mime type detected from the file's content is allowed
-- the client filename extension is consistent with the file's content
-- the client media type is consistent with the detected mime type  
-  (only if `validateClientMediaType` is enabled)
-- the filename contains only alphanumeric characters, hyphens, underscores, spaces, and periods  
-  (if `strictFilenameCharacters` is `true`)
-- the filename length does not exceed the configured `maxFilenameLength`
-- the file size does not exceed the configured `maxFileSizeInKb`  
-  (default: `null` = unlimited)
-
-Once the uploaded file is validated and accepted, you can rely on:
-
-- `$uploadedFile->getClientMediaType()` being allowed and consistent with the file content  
-  (if strict client media type validation is enabled)
-- `$uploadedFile->getClientFilename()` having a valid and consistent extension
-
-The only remaining responsibility is verifying the filename itself, excluding the extension:
-
-```php
-$filename = $uploadedFile->getClientFilename();
-
-$extension = pathinfo($filename, PATHINFO_EXTENSION);
-// is valid as verified
-```
-
-If you use the [File Writer](#file-writer) to store files, ensure the ```filenames``` parameter is configured safely.
-
-```php
-use Tobento\App\Media\FileStorage\FileWriter;
-
-$fileWriter = new FileWriter(
-    filenames: FileWriter::ALNUM,
-    
-    // or
-    filenames: FileWriter::RENAME,
-    
-    // or
-    filenames: function (string $filename): string {
-        // verify filename!
-        return $verifiedFilename;
-    },
-);
-```
-
-**File Storage Location**
-
-Always store uploaded files outside the webroot or on a separate host.  
-If you use the [File Writer](#file-writer), ensure the configured `storage` location is outside the webroot - such as the default ```uploads-private``` or ```uploads-public``` storage.
-
-**Resources**
-
-For further guidance on secure file uploads, refer to:  
-[File Upload Cheatsheet - owasp.org](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html).
-
-#### Upload CSV Validator
-
-The CSV validator extends the base [upload validator](#upload-validator) with additional CSV-specific security checks.  
-It ensures that uploaded CSV files are structurally valid, safe to process, and free from spreadsheet-formula injection.
-
-```php
-use Tobento\App\Media\Exception\UploadedFileException;
-use Tobento\App\Media\Upload\CsvValidator;
-use Tobento\App\Media\Upload\ValidatorInterface;
-
-$validator = new CsvValidator(
-    allowedExtensions: ['csv'],
-);
-
-// Disable deep CSV content validation if needed returning a new instance:
-$validator = $validator->withValidateCsvContent(false);
-
-var_dump($validator instanceof ValidatorInterface);
-// bool(true)
-
-try {
-    $validator->validateUploadedFile($uploadedFile);
-} catch (UploadedFileException $e) {
-    // CSV validation failed.
-}
-```
-
-**CSV-Specific Security**
-
-The CSV validator ensures:
-- the file extension is csv
-- the detected mime type is one of the allowed CSV mime types: text/csv, text/plain, application/csv, application/vnd.ms-excel
-- the CSV can be parsed line-by-line
-- all rows have a consistent number of columns
-- no cell begins with =, +, -, or @ (prevents spreadsheet formula injection)
-- UTF-8 BOM is handled correctly
-- empty lines are ignored safely
-
-#### Upload NDJSON Validator
-
-The NDJSON validator extends the base [upload validator](#upload-validator) with line-by-line JSON validation.  
-It ensures that uploaded NDJSON files contain **one valid JSON object per line**, ignore empty lines, and safely reject malformed entries.
-
-```php
-use Tobento\App\Media\Exception\UploadedFileException;
-use Tobento\App\Media\Upload\NdjsonValidator;
-use Tobento\App\Media\Upload\ValidatorInterface;
-
-$validator = new NdjsonValidator(
-    allowedExtensions: ['ndjson'],
-);
-
-var_dump($validator instanceof ValidatorInterface);
-// bool(true)
-
-try {
-    $validator->validateUploadedFile($uploadedFile);
-} catch (UploadedFileException $e) {
-    // NDJSON validation failed.
-}
-```
-
-#### Upload PDF Validator
-
-The PDF validator extends the base [upload validator](#upload-validator) with additional PDF-specific security checks.  
-It ensures that uploaded PDF files are structurally safe by detecting features commonly used for malicious behavior, such as JavaScript, embedded files, encryption, and auto-execution actions.
-
-```php
-use Tobento\App\Media\Exception\UploadedFileException;
-use Tobento\App\Media\Upload\PdfValidator;
-use Tobento\App\Media\Upload\ValidatorInterface;
-
-$validator = new PdfValidator(
-    allowedExtensions: ['pdf'],
-);
-
-var_dump($validator instanceof ValidatorInterface);
-// bool(true)
-
-try {
-    $validator->validateUploadedFile($uploadedFile);
-} catch (UploadedFileException $e) {
-    // PDF validation failed.
-}
-```
-
-#### Upload ZIP Validator
-
-The ZIP validator extends the base [upload validator](#upload-validator) with archive-specific security checks.  
-It ensures that uploaded ZIP files are safe to extract, structurally valid, and free from common archive-based attack vectors such as ZIP bombs, directory traversal, and excessive nesting.
-
-```php
-use Tobento\App\Media\Exception\UploadedFileException;
-use Tobento\App\Media\Upload\ZipValidator;
-use Tobento\App\Media\Upload\ValidatorInterface;
-
-$validator = new ZipValidator(
-    allowedExtensions: ['zip'],
-);
-
-// Configure optional ZIP-specific limits returning a new instance:
-$validator = $validator
-    ->withMaxEntries(1000) // Maximum number of files inside the ZIP (default: 2000)
-    ->withMaxTotalUncompressedBytes(10_000) // Total uncompressed size limit (default: 50_000_000 (50 MB))
-    ->withMaxCompressionRatio(20) // Prevent ZIP bombs (default: 200)
-    ->withMaxDepth(1); // Maximum nested ZIP depth (default: 3)
-
-var_dump($validator instanceof ValidatorInterface);
-// bool(true)
-
-try {
-    $validator->validateUploadedFile($uploadedFile);
-} catch (UploadedFileException $e) {
-    // ZIP validation failed.
-}
-```
-
-**ZIP-Specific Security Features**
-
-The `ZipValidator` performs several safety checks to ensure uploaded archives are safe to process:
-
-- **Maximum entry count**  
-  Prevents ZIP files containing thousands of entries, which can overwhelm extraction routines.
-
-- **Maximum total uncompressed size**  
-  Protects against ZIP bombs that expand to massive sizes when extracted.
-
-- **Maximum compression ratio**  
-  Detects malicious archives with extreme compression ratios.
-
-- **Directory traversal protection**  
-  Blocks unsafe paths such as:
-```text
-../evil.txt
-../../etc/passwd
-```
-
-- **Nested ZIP depth**  
-  Controls how many layers of ZIP-within-ZIP are allowed. Useful for preventing recursive archive bombs.
-
-- **In-memory nested ZIP validation**  
-  Nested ZIPs are validated using an internal in‑memory uploaded file implementation, without writing to disk.
-
-#### Upload Combine Validator
-
-The combine validator allows you to register multiple validators and automatically dispatches validation to the first validator that supports the file's extension.
-
-This is ideal when your application accepts multiple file types, each with its own specialized validator.
-
-```php
-use Tobento\App\Media\Exception\UploadedFileException;
-use Tobento\App\Media\Upload\CombineValidator;
-use Tobento\App\Media\Upload\CsvValidator;
-use Tobento\App\Media\Upload\Validator;
-use Tobento\App\Media\Upload\ValidatorInterface;
-
-$validator = new CombineValidator(
-    new CsvValidator(allowedExtensions: ['csv']), // handles .csv
-    new Validator(), // fallback for all other extensions
-);
-
-var_dump($validator instanceof ValidatorInterface);
-// bool(true)
-
-try {
-    $validator->validateUploadedFile($uploadedFile);
-} catch (UploadedFileException $e) {
-    // no matching validator or validation failed
-}
-```
+All validators from service-upload are available.  
+See https://github.com/tobento-ch/service-upload#upload-validators
 
 ### Uploaded File Factory
 
-The uploaded file factory creates PSR-7 `UploadedFileInterface` instances from different resources such as remote URLs or storage files.
-
-```php
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Message\UploadedFileFactoryInterface as Psr17UploadedFileFactoryInterface;
-use Tobento\App\Media\Upload\UploadedFileFactory;
-use Tobento\App\Media\Upload\UploadedFileFactoryInterface;
-
-$factory = new UploadedFileFactory(
-    uploadedFileFactory: $uploadedFileFactory, // Psr17UploadedFileFactoryInterface
-    streamFactory: $streamFactory, // StreamFactoryInterface
-    client: $client, // ClientInterface (PSR-18)
-    requestFactory: $requestFactory, // RequestFactoryInterface (PSR-17)
-);
-
-var_dump($factory instanceof UploadedFileFactoryInterface);
-// bool(true)
-```
-
-**createFromRemoteUrl**
-
-Creates an uploaded file by downloading the content from a remote URL using a PSR-18 HTTP client.
-
-```php
-use Psr\Http\Message\UploadedFileInterface;
-use Tobento\App\Media\Exception\CreateUploadedFileException;
-
-try {
-    $uploadedFile = $factory->createFromRemoteUrl(
-        url: 'https://example.com/image.jpg' // string
-    );
-    
-    var_dump($uploadedFile instanceof UploadedFileInterface);
-    // bool(true)
-} catch (CreateUploadedFileException $e) {
-    // creating uploaded file failed.
-}
-```
-
-If the remote request fails or the response status code is not 200, a `CreateUploadedFileException` is thrown.
-
-**createFromStorageFile**
-
-Creates an uploaded file from a [Storage File](https://github.com/tobento-ch/service-file-storage#file-interface).
-
-```php
-use Psr\Http\Message\UploadedFileInterface;
-use Tobento\App\Media\Exception\CreateUploadedFileException;
-use Tobento\Service\FileStorage\FileInterface;
-
-try {
-    $uploadedFile = $factory->createFromStorageFile(
-        file: $file // FileInterface
-    );
-    
-    var_dump($uploadedFile instanceof UploadedFileInterface);
-    // bool(true)
-} catch (CreateUploadedFileException $e) {
-    // creating uploaded file failed.
-}
-```
-
-If the storage file does not provide a stream, a `CreateUploadedFileException` is thrown.
+Factory for creating `UploadedFile` instances.
+See https://github.com/tobento-ch/service-upload#uploaded-file-factory
 
 ### Image Processor
 
-The image processor class processes the given image with the defined actions using the [Imager Service](https://github.com/tobento-ch/service-imager).
+`\Tobento\App\Media\Upload\ImageProcessor` is an app-media wrapper around the  
+`tobento/service-upload` `ImageProcessor`, adding logging support and  
+application-level integration.
 
-```php
-use Tobento\App\Media\Image\ImageProcessor;
-use Tobento\App\Media\Image\ImageProcessorInterface;
-use Tobento\Service\Imager\Action;
-use Tobento\Service\Imager\ActionFactoryInterface;
+Vendor documentation:  
+https://github.com/tobento-ch/service-upload#image-processor
 
-$imageProcessor = new ImageProcessor(
-    // Define the imager actions to be processed:
-    actions: [
-        'orientate' => [],
-        'resize' => ['width' => 300],
-        new Action\Contrast(20),
-    ],
-    
-    // You may define imager actions which are allowed only.
-    // If empty array all are allowed if not in disallowedActions.
-    allowedActions: [
-        Action\Greyscale::class,
-    ],
-    
-    // You may define imager actions which are not allowed and will be skipped:
-    disallowedActions: [
-        Action\Colorize::class,
-    ],
-    
-    // You may convert certain images e.g. png to jpeg:
-    convert: ['image/png' => 'image/jpeg'],
-    
-    // You may adjust the image quality:
-    quality: ['image/jpeg' => 90, 'image/webp' => 90],
-    
-    // You may adjust the supported mime types:
-    supportedMimeTypes: ['image/png', 'image/jpeg', 'image/gif'], // default
-    
-    // You may define a custom imager actions class:
-    //actionFactory: $customActionFactory, // ActionFactoryInterface
-);
+It is used by the [Image Editor Feature](#image-editor-feature) and the [Picture Editor Feature](#picture-editor-feature).
 
-var_dump($imageProcessor instanceof ImageProcessorInterface);
-// bool(true)
+### Picture Generator
 
-// Use the following methods to modify the image processor returning a new instance:
-$imageProcessor = $imageProcessor->withActions([
-    'resize' => ['width' => 300],
-]);
+`\Tobento\App\Media\Picture\PictureGenerator` is an app-media wrapper around the  
+`tobento/service-picture-generator` `PictureGenerator`, adding logging support and  
+application-level integration.
 
-$imageProcessor = $imageProcessor->withConvert([
-    'image/png' => 'image/jpeg',
-]);
+Vendor documentation:  
+https://github.com/tobento-ch/service-picture-generator
 
-$imageProcessor = $imageProcessor->withQuality([
-    'image/jpeg' => 90,
-    'image/webp' => 90,
-]);
-```
-
-**processFromResource**
-
-Use the ```processFromResource``` method to process the given resource:
-
-```php
-use Tobento\App\Media\Exception\ImageProcessException;
-use Tobento\Service\Imager\ResourceInterface;
-use Tobento\Service\Imager\Response\Encoded;
-
-$encoded = $imageProcessor->processFromResource(
-    resource: $resource, // ResourceInterface
-);
-
-var_dump($encoded instanceof Encoded);
-// bool(true)
-
-// throws ImageProcessException if image cannot get processed!
-```
-
-Check out the [Resource](https://github.com/tobento-ch/service-imager#resource) and [Encoded](https://github.com/tobento-ch/service-imager#encoded-response) documentation to learn more.
-
-**processFromStream**
-
-Use the ```processFromStream``` method to process the given stream:
-
-```php
-use Psr\Http\Message\StreamInterface;
-use Tobento\App\Media\Exception\ImageProcessException;
-use Tobento\Service\Imager\Response\Encoded;
-
-$encoded = $imageProcessor->processFromStream(
-    stream: $stream, // StreamInterface
-);
-
-var_dump($encoded instanceof Encoded);
-// bool(true)
-
-// throws ImageProcessException if image cannot get processed!
-```
-
-Check out the [Encoded](https://github.com/tobento-ch/service-imager#encoded-response) documentation to learn more.
+It is also used by the [Picture Feature](#picture-feature) and the [Picture Editor Feature](#picture-editor-feature).
 
 ## Learn More
 
