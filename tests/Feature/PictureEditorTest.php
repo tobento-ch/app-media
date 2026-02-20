@@ -19,12 +19,12 @@ use Tobento\App\FileStorage\FilesystemStorageFactory;
 use Tobento\App\Media\Event;
 use Tobento\App\Media\Feature;
 use Tobento\App\Media\FeaturesInterface;
-use Tobento\App\Media\Queue\PictureJobHandler;
 use Tobento\App\Testing\Http\AssertableJson;
 use Tobento\Service\FileStorage\StoragesInterface;
 use Tobento\Service\Language\LanguageFactory;
 use Tobento\Service\Language\LanguagesInterface;
 use Tobento\Service\Language\Languages;
+use Tobento\Service\Picture\Generator\Queue\PictureJobHandler;
 use function Tobento\App\{directory};
 
 class PictureEditorTest extends \Tobento\App\Testing\TestCase
