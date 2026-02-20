@@ -1,6 +1,6 @@
 {
     "name": "tobento/app-media",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "type": "library",
     "description": "App media support.",
     "keywords": [
@@ -38,12 +38,13 @@
         "tobento/app-queue": "^2.0",
         "tobento/app-view": "^2.0",
         "tobento/js-cropper": "^1.0",
+        "tobento/service-collection": "^2.0",
         "tobento/service-icon": "^2.0",
         "tobento/service-imager": "^2.0",
         "tobento/service-filesystem": "^2.0",
-        "tobento/service-collection": "^2.0",
         "tobento/service-picture": "^2.0",
-        "league/mime-type-detection": "^1.16",
+        "tobento/service-picture-generator": "^2.0",
+        "tobento/service-upload": "^2.0",
         "enshrined/svg-sanitize": "^0.22.0"
     },  
     "require-dev": {
