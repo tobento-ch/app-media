@@ -23,21 +23,21 @@ use Tobento\App\Language\RouteLocalizerInterface;
 use Tobento\App\Media\FeatureInterface;
 use Tobento\App\Media\FeaturesInterface;
 use Tobento\App\Media\Event;
-use Tobento\App\Media\Exception\ImageProcessException;
-use Tobento\App\Media\Image\ImageActionsInterface;
-use Tobento\App\Media\Image\ImageProcessor;
-use Tobento\App\Media\Image\ImageProcessorInterface;
-use Tobento\App\Media\Image\MessagesFactory as ImagerMessagesFactory;
+use Tobento\App\Media\Imager\MessagesFactory as ImagerMessagesFactory;
+use Tobento\App\Media\Upload\ImageProcessor;
 use Tobento\App\Migration\Boot\Migration;
 use Tobento\App\User\Middleware\VerifyPermission;
 use Tobento\Service\FileStorage\FileNotFoundException;
 use Tobento\Service\FileStorage\FileWriteException;
 use Tobento\Service\FileStorage\StorageInterface;
 use Tobento\Service\FileStorage\StoragesInterface;
+use Tobento\Service\Imager\ImageActionsInterface;
 use Tobento\Service\Requester\RequesterInterface;
 use Tobento\Service\Responser\ResponserInterface;
 use Tobento\Service\Routing\RouteGroupInterface;
 use Tobento\Service\Routing\RouterInterface;
+use Tobento\Service\Upload\Exception\ImageProcessException;
+use Tobento\Service\Upload\ImageProcessorInterface;
 use Tobento\Service\Uri\PreviousUriInterface;
 
 /**
@@ -100,7 +100,7 @@ class ImageEditor extends Boot implements FeatureInterface
         ],
         protected array $supportedStorages = ['images'],
         protected array $supportedMimeTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-        protected string $imageActions = \Tobento\App\Media\Image\ImageActions::class,
+        protected string $imageActions = \Tobento\App\Media\Imager\ImageActions::class,
         protected null|string $userPermission = 'media.image.editor',
         protected bool $localizeRoute = false,
         protected string $view = 'media/image/editor',
@@ -309,7 +309,7 @@ class ImageEditor extends Boot implements FeatureInterface
         }
         
         // Create messages from image actions:
-        $messages = (new ImagerMessagesFactory())->createMessagesFromActions(
+        $messages = new ImagerMessagesFactory()->createMessagesFromActions(
             actions: $encoded->actions()->withoutProcessedBy()
         );
         
@@ -406,7 +406,7 @@ class ImageEditor extends Boot implements FeatureInterface
         }
         
         // Create messages from image actions:
-        $messages = (new ImagerMessagesFactory())->createMessagesFromActions(
+        $messages = new ImagerMessagesFactory()->createMessagesFromActions(
             actions: $encoded->actions()->withoutProcessedBy()
         );
 
