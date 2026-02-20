@@ -19,11 +19,6 @@ use Tobento\App\Boot\Config;
 use Tobento\App\Media\FeatureInterface;
 use Tobento\App\Media\FeaturesInterface;
 use Tobento\App\Media\Picture\PictureGenerator;
-use Tobento\App\Media\Picture\PictureGeneratorInterface;
-use Tobento\App\Media\Picture\PictureRepository;
-use Tobento\App\Media\Picture\PictureRepositoryInterface;
-use Tobento\App\Media\Queue\PictureQueueHandlerInterface;
-use Tobento\App\Media\Queue\PictureQueueHandler;
 use Tobento\App\Migration\Boot\Migration;
 use Tobento\Service\Console\ConsoleInterface;
 use Tobento\Service\Dir\Dirs;
@@ -32,6 +27,11 @@ use Tobento\Service\Imager\ResourceInterface;
 use Tobento\Service\Picture\DefinitionInterface;
 use Tobento\Service\Picture\Definitions;
 use Tobento\Service\Picture\DefinitionsInterface;
+use Tobento\Service\Picture\Generator\PictureGeneratorInterface;
+use Tobento\Service\Picture\Generator\PictureRepository;
+use Tobento\Service\Picture\Generator\PictureRepositoryInterface;
+use Tobento\Service\Picture\Generator\Queue\PictureQueueHandler;
+use Tobento\Service\Picture\Generator\Queue\PictureQueueHandlerInterface;
 use Tobento\Service\Picture\PictureTagInterface;
 use Tobento\Service\Queue\QueueInterface;
 use Tobento\Service\View\ViewInterface;
@@ -159,7 +159,7 @@ class Picture extends Boot implements FeatureInterface
         
         // Console commands:
         $app->on(ConsoleInterface::class, static function(ConsoleInterface $console): void {
-            $console->addCommand(\Tobento\App\Media\Console\PictureClearCommand::class);
+            $console->addCommand(\Tobento\Service\Picture\Generator\Console\PictureClearCommand::class);
         });
     }
     
