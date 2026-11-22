@@ -23,7 +23,7 @@ use Tobento\App\Http\Exception\NotFoundException;
 use Tobento\Service\FileStorage\FileNotFoundException;
 use Tobento\Service\FileStorage\StoragesInterface;
 use Tobento\Service\Routing\RouterInterface;
-use Tobento\Service\Support\Str;
+use Tobento\Service\Support\ContentDisposition;
 
 class FileDownload extends Boot implements FeatureInterface
 {
@@ -154,14 +154,7 @@ class FileDownload extends Boot implements FeatureInterface
         return $responseFactory->createResponse(200)
             ->withHeader('X-Exclude-Previous-Uri', '1')
             ->withHeader('Content-Type', (string)$file->mimeType())
-            ->withHeader(
-                'Content-Disposition',
-                sprintf(
-                    "attachment; filename=\"%s\"; filename*=UTF-8''%s",
-                    $this->asciiFallback($file->name()),
-                    rawurlencode($file->name())
-                )
-            )
+            ->withHeader('Content-Disposition', ContentDisposition::header($file->name()))
             ->withHeader('Content-Length', (string)$file->size())
             ->withBody($file->stream());
     }
@@ -175,23 +168,5 @@ class FileDownload extends Boot implements FeatureInterface
     protected function supportsStorage(string $storage): bool
     {
         return in_array($storage, $this->supportedStorages);
-    }
-    
-    /**
-     * Returns an ASCII-only fallback filename for use in the
-     * Content-Disposition header. Any non-ASCII characters are
-     * replaced with underscores to ensure broad browser compatibility.
-     *
-     * @param string $filename The original filename.
-     * @return string The sanitized ASCII fallback filename.
-     */
-    protected function asciiFallback(string $filename): string
-    {
-        $info = pathinfo($filename);
-
-        $name = Str::slug($info['filename'], '-');
-        $ext  = isset($info['extension']) ? '.' . $info['extension'] : '';
-
-        return $name . $ext;
     }
 }
