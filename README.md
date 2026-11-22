@@ -316,7 +316,7 @@ use Tobento\Service\Routing\RouterInterface;
 $router = $app->get(RouterInterface::class);
 
 $url = $router->url('media.file.display.signed', [
-    'storage' => 'private',
+    'storage' => 'uploads-private',
     'path' => 'path/to/file.pdf',
 ])->sign();
 ```
@@ -430,7 +430,7 @@ use Tobento\Service\Routing\RouterInterface;
 $router = $app->get(RouterInterface::class);
 
 $url = $router->url('media.file.download.signed', [
-    'storage' => 'private',
+    'storage' => 'uploads-private',
     'path' => 'path/to/file.pdf',
 ])->sign();
 ```
@@ -574,7 +574,7 @@ In the [media config file](#media-config) you can configure this feature:
         ],
 
         // define the supported storages:
-        supportedStorages: ['uploads'],
+        supportedStorages: ['uploads-private', 'uploads-public'],
         
         // define the supported mime types:
         supportedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
@@ -622,7 +622,7 @@ In the ```app/config/logging.php``` file you may define the logger to be used, o
 Use the ```media.image.editor``` route name to generate the URL where you can edit the specified image.
 
 ```php
-$url = $router->url('media.image.editor', ['template' => 'default', 'storage' => 'uploads', 'path' => 'image.jpg']);
+$url = $router->url('media.image.editor', ['template' => 'default', 'storage' => 'uploads-private', 'path' => 'image.jpg']);
 ```
 
 **Events**
@@ -786,13 +786,13 @@ In the [media config file](#media-config) you can configure this feature:
         ],
         
         // define the supported storages:
-        supportedStorages: ['uploads'],
+        supportedStorages: ['uploads-private', 'uploads-public'],
         
         // define the supported mime types:
         supportedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
         
         // you may define a custom image actions class:
-        imageActions: \Tobento\App\Media\Image\ImageActions::class, // default
+        imageActions: \Tobento\App\Media\Imager\ImageActions::class, // default
         
         // define the user permission or null if no permission is needed (not recommended):
         userPermission: 'media.picture.editor', // default
@@ -844,7 +844,7 @@ Use the ```media.picture.editor``` route name to generate the url where you can 
 ```php
 $url = $router->url('media.picture.editor', [
     'template' => 'default',
-    'storage' => 'uploads',
+    'storage' => 'uploads-private',
     'path' => 'image.jpg',
     'definitions' => ['product', 'product-list']
 ]);
