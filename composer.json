@@ -1,6 +1,6 @@
 {
     "name": "tobento/app-media",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "type": "library",
     "description": "App media support.",
     "keywords": [
@@ -44,6 +44,7 @@
         "tobento/service-filesystem": "^2.0",
         "tobento/service-picture": "^2.0",
         "tobento/service-picture-generator": "^2.0",
+        "tobento/service-support": "^2.0",
         "tobento/service-upload": "^2.0",
         "enshrined/svg-sanitize": "^0.22.0"
     },  
